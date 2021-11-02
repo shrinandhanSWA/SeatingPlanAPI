@@ -7,7 +7,8 @@ app=Flask(__name__)
 def index():
     if request.method=='GET':
         # TODO: read arguments that are given
-        result = {"status": "success"}
+        value = request.args.get('aayush')
+        result = {"status": "success", "value": value}
         return jsonify(result)
     else:
         return jsonify({'Error':"This is a GET API method"})
