@@ -1,10 +1,12 @@
 from .block import Block
 
 class Seat(Block):
-    def __init__(self, seat_no, occupant=None):
+    def __init__(self, seat_no, row, column, occupant=None):
         self.seat_no = seat_no
         self.occupant = occupant
         self.available = True
+        self.row = row
+        self.column = column
 
     def set_occupant(self, occupant):
         self.occupant = occupant
