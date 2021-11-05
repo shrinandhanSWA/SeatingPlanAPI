@@ -44,10 +44,13 @@ class LectureTheatre:
 
             self.grid.append(row_blocks)
         
+    def get_available_seats(self):
+        return filter(lambda seat: seat.is_available(), self.seats.values())
+
     def allocate_random_seats(self, people):
         random.shuffle(people)
 
-        for seat, person in zip(self.available_seats, people):
+        for seat, person in zip(self.get_available_seats(), people):
             seat.set_occupant(person)
 
 
@@ -56,11 +59,32 @@ class LectureTheatre:
         r2, c2 = seat2.row, seat2.column
         return abs(r1 - r2) <= 1 and abs(c1 - c2) <= 1
 
+    def block_neighbours(self, seat):
+        row, column = seat.row, seat.column
+
+        for dx in -1, 0, 1:
+            for dy in -1, 0, 1:
+                if abs(dx) + abs(dy) != 1:
+                    continue
+
+                x = row + dx
+                y = column + dy
+
+                if x < 0 or x >= self.no_of_rows() or y < 0 or y >= self.no_of_columns():
+                    continue
+
+                neighbour = self.grid[x][y]
+                if isinstance(neighbour, Seat):
+                    neighbour.set_unavailable()
+
     def block_alternate_seats(self):
-        for seat_no in range(len(self.available_seats)):
+        for seat_no in range(len(self.seats)):
             seat = self.seats[seat_no]
             if not seat.is_available():
                 continue
+
+            self.block_neighbours(seat)
+            
             if seat_no > 1:
                 left_seat = self.seats[seat_no - 1]
                 if self.seats_are_neighbours(left_seat, seat):
@@ -95,6 +119,6 @@ if __name__ == "__main__":
     for i in range(10):
         people.append(Student("Rohan", "Pandit", "rp619"))
 
-    lt1.allocate_random_seats(people)
     lt1.block_alternate_seats()
+    lt1.allocate_random_seats(people)
     print(lt1)
