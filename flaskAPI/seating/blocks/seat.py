@@ -19,8 +19,8 @@ class Seat(Block):
 
     def __str__(self):
         if not self.available:
-            return f"|X{self.seat_no}X|"
+            return f"|XX|"
         elif not self.occupant:
-            return f"|_{self.seat_no}_|"
+            return f"|__|"
 
         return f'|{self.occupant}|'
