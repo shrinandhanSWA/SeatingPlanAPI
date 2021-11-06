@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request
-from main import print_hi
+from print_hi import print_hi
 
 app=Flask(__name__)
 @app.route("/",methods=['GET','POST'])
