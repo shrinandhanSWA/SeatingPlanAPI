@@ -2,7 +2,7 @@ from blocks.aisle import Aisle
 from blocks.door import Door
 from blocks.seat import Seat
 import random
-
+import json
 
 def seats_are_neighbours(seat1, seat2):
     r1, c1 = seat1.row, seat1.column
@@ -23,6 +23,10 @@ class LectureTheatre:
         self.available_seats = []
 
         self.initialise_grid()
+        print(self.toJSON())
+
+    def toJSON(self):
+        return list(map(lambda row: list(map(lambda b: b.toJSON(), row)), self.grid))
 
     def no_of_columns(self):
         return len(self.grid[0])
@@ -38,18 +42,17 @@ class LectureTheatre:
         for i, row in enumerate(self.plan.split('\n')):
             row_blocks = []
             for j, block in enumerate(row.split(',')):
-                if block == 'A':
-                    row_blocks.append(Aisle())
+                if block == '.':
+                    row_blocks.append(Aisle(i, j))
 
                 elif block == 'D':
-                    row_blocks.append(Door())
+                    row_blocks.append(Door(i, j))
 
-                elif block[0] == 'S':
-                    seat_no_str = block[1:]
-                    # calculate seat number
-                    if seat_no_str:
-                        seat_no = int(seat_no_str)
+                elif block == 'S' or block.isnumeric():
+                    if block.isnumeric():
+                        seat_no = int(block)
                     else:
+                        # calculate seat number
                         seat_no = default_seat_no
                         default_seat_no += 1
 
@@ -107,7 +110,7 @@ class LectureTheatre:
         Blocks alternate seats for social distancing
         :return: none
         """
-        for seat_no in range(len(self.seats)):
+        for seat_no in range(1, len(self.seats)):
             seat = self.seats[seat_no]
             if not seat.is_available():
                 continue
@@ -133,13 +136,22 @@ class LectureTheatre:
 if __name__ == "__main__":
     from people.student import Student
 
-    plan1 = '''\
-        D, A,  S,S,S,S,S,S,S,S,S,S,S, A, D
-        S,S,A,  S,S,S,S,S,S,S,S,S,S, A,S,S
-        S,S,S,A, S,S,S,S,S,S,S,S,S, A,S,S,S
-        S,S,S,S,A, S,S,S,S,S,S,S,S,A,S,S,S,S
-        S,S,S,S, A, S,S,S,S,S,S,S,A,S,S,S,S
-        S,S,S,S,  A, S,S,S,S,S,S,A,S,S,S,S\
+    plan1 = '''\ 
+        .,.,.,63,62,61,60,59,58,57,56,55,54,53,52,51,50,49,48,47,46,45,44,43,42,.,.,.,.,.,.
+        .,.,.,.,.,.,.,.,.,.,.,41,40,39,38,37,36,35,34,.,.,.,.,.,.,.,.,.,.,.,.
+        .,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+        .,.,.,.,.,.,.,.,.,.,90,.,.,.,.,.,.,.,.,.,27,.,.,.,.,.,.,.,.,.,.
+        .,.,.,.,.,.,.,.,.,89,.,.,33,32,31,30,29,28,.,.,.,26,.,.,.,.,.,.,.,.,.
+        .,.,.,.,.,.,.,.,88,.,.,.,.,.,.,.,.,.,.,.,.,.,25,.,.,.,.,.,.,.,.
+        .,.,.,.,.,.,.,87,.,.,79,.,.,.,.,.,.,.,.,.,.,.,.,24,.,.,.,.,.,.,.
+        .,.,.,.,.,.,86,.,.,78,,.,71,.,.,.,8,.,.,.,16,.,.,.,23,.,.,.,.,.,.
+        .,.,.,.,.,85,.,.,77,,.,70,,.,.,.,,7,.,.,.,15,.,.,.,22,.,.,.,.,.
+        .,.,.,.,84,.,.,76,,.,69,,,.,.,.,,,6,.,.,.,14,.,.,.,21,.,.,.,.
+        .,.,.,83,.,.,75,,.,68,,.,.,.,.,.,.,.,,5,.,.,.,13,.,.,.,20,.,.,.
+        .,.,82,.,.,74,,.,67,,.,.,.,.,.,.,.,.,.,,4,.,.,.,12,.,.,.,19,.,.
+        .,81,.,.,73,,.,66,,.,.,.,.,.,.,.,.,.,.,.,.,3,.,.,.,11,.,.,.,18,.
+        80,.,.,72,,.,65,,.,.,.,.,.,.,.,.,.,.,.,.,.,.,2,.,.,.,10,.,.,.,17
+        .,.,.,,.,64,,.,.,.,.,,,.,.,.,,,.,.,.,.,.,1,.,.,.,9,.,.,.\
     '''
     lt1 = LectureTheatre(plan1)
     people = []
