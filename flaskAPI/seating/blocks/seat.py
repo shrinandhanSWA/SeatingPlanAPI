@@ -2,11 +2,11 @@ from .block import Block
 
 class Seat(Block):
     def __init__(self, seat_no, row, column, occupant=None):
+        super().__init__(row, column)
         self.seat_no = seat_no
         self.occupant = occupant
         self.available = True
-        self.row = row
-        self.column = column
+
 
     def set_occupant(self, occupant):
         self.occupant = occupant
@@ -19,8 +19,8 @@ class Seat(Block):
 
     def __str__(self):
         if not self.available:
-            return f"|XX|"
+            return f"|X|"
         elif not self.occupant:
-            return f"|__|"
+            return f"|_{self.seat_no}_|"
 
         return f'|{self.occupant}|'
