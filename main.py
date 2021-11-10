@@ -37,4 +37,4 @@ if __name__ == '__main__':
     # db.insert_one(post)
     # post = {"_id": 2, "name": "aayush", "score": 5, "nationality": "Indian", "modules": ["c1234", "c2356", "e5693"]}
     # db.insert_one(post)
-    # print(get_lecture_hall('ACEX554'))
+    print(get_lecture_hall('ACEX554'))
