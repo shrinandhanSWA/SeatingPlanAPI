@@ -1,20 +1,33 @@
 from pymongo import MongoClient
 
 client = MongoClient(
+    "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
+db = client.myFirstDatabase
+
+def get_lecture_hall(lecture_hall):
+    hall = db[lecture_hall]
+
+    for h in hall:
+        print(h)
+
+
+def main(module, lecture_hall, filters):
+    # get list of students
+    client = MongoClient(
         "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
-db = client.test
-db = db["students"]
+    db = client.myFirstDatabase
+    db = db["lecture_halls"]
 
-def filter_students(module, mydoc):
+    mydoc = db.find({ "name": lecture_hall })
 
-    students = []
+    for x in mydoc:
+        return x["layout"]
 
-    for student in mydoc:
-        modules = student['modules']
-        if module in modules:
-            students.append(student)
-
-    return students
+    # TODO:
+    """
+    Firstly check if the lecture hall has enough capacity(with or without social distancing)
+    Then try to allocate based on the filters
+    """
 
 
 if __name__ == '__main__':
@@ -22,11 +35,5 @@ if __name__ == '__main__':
     # db.insert_one(post)
     # post = {"_id": 2, "name": "aayush", "score": 5, "nationality": "Indian", "modules": ["c1234", "c2356", "e5693"]}
     # db.insert_one(post)
-
-    mydoc = db.find()
-
-    students = filter_students("e5693", mydoc)
-
-    for x in students:
-        print(x)
-
+    # print(get_lecture_hall('ACEX554'))
+    main('c1234', 'ACEX554', 2)
