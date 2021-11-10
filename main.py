@@ -23,6 +23,8 @@ def main(module, lecture_hall, filters):
     for x in mydoc:
         return x["layout"]
 
+    return 2
+
     # TODO:
     """
     Firstly check if the lecture hall has enough capacity(with or without social distancing)
@@ -36,4 +38,3 @@ if __name__ == '__main__':
     # post = {"_id": 2, "name": "aayush", "score": 5, "nationality": "Indian", "modules": ["c1234", "c2356", "e5693"]}
     # db.insert_one(post)
     # print(get_lecture_hall('ACEX554'))
-    main('c1234', 'ACEX554', 2)

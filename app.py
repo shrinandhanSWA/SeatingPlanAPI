@@ -11,7 +11,8 @@ def index():
         lecture_hall = request.args.get('lecture_hall')
         filters = request.args.get('filters')
 
-        seating = main(module, lecture_hall, filters)
+        seating = main(module, str(lecture_hall), filters)
+
 
         result = {"status": "success", "layout": seating, "module": module, "lecture_hall": lecture_hall, "filters": filters}
         return jsonify(result)
