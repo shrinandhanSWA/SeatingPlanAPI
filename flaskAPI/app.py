@@ -1,6 +1,5 @@
 from flask import Flask, jsonify, request
 from main import main
-from main import get_lecture_hall
 
 app = Flask(__name__)
 
