@@ -2,12 +2,11 @@ from layout import Layout
 from blocks.aisle import Aisle
 from blocks.door import Door
 from blocks.seat import Seat
-import random
 
 class LectureTheatre:
     def __init__(self, rows):
         # remove
-        self.layout = Layout(rows) 
+        self.layout = Layout(rows)
     
     def getLayout(self):
         return self.layout

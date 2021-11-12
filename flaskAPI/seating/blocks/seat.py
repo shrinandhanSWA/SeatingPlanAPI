@@ -17,7 +17,7 @@ class Seat(Block):
         self.occupant = occupant
 
     def is_available(self):
-        return self.available
+        return self.available and not self.occupant
 
     def set_unavailable(self):
         self.available = False
