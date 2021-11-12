@@ -7,6 +7,11 @@ class Seat(Block):
         self.occupant = occupant
         self.available = True
 
+    def toJSON(self):
+        dict_ = self.__dict__
+        if self.occupant:
+            dict_['occupant'] = self.occupant.toJSON()
+        return dict_
 
     def set_occupant(self, occupant):
         self.occupant = occupant
