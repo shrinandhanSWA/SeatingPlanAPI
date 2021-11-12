@@ -4,11 +4,23 @@ client = MongoClient(
     "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
 db = client.myFirstDatabase
 
-def get_lecture_hall(lecture_hall):
-    hall = db[lecture_hall]
+
+def get_lecture_hall(lecture_hall, db):
+    halls = db["lecture_halls"]
+
+    hall = halls.find({"name": lecture_hall})
 
     for h in hall:
-        print(h)
+        print(h["layout"])
+
+
+def get_module(module, db):
+    module_db = db["categories"]
+
+    students = module_db.find({"slug": module})
+
+    for student in students:
+        print(student)
 
 
 def main(module, lecture_hall, filters):
@@ -16,12 +28,11 @@ def main(module, lecture_hall, filters):
     client = MongoClient(
         "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
     db = client.myFirstDatabase
-    db = db["lecture_halls"]
 
-    mydoc = db.find({ "name": lecture_hall })
+    get_lecture_hall(lecture_hall, db)
+    mydb = db["lecture_halls"]
 
-    for x in mydoc:
-        return x["layout"]
+    get_module(module, db)
 
     return 2
 
@@ -33,8 +44,4 @@ def main(module, lecture_hall, filters):
 
 
 if __name__ == '__main__':
-    # post = {"_id": 3, "name": "nandhu", "score": 5, "nationality": "Indian", "modules": ["c1234", "c2356"]}
-    # db.insert_one(post)
-    # post = {"_id": 2, "name": "aayush", "score": 5, "nationality": "Indian", "modules": ["c1234", "c2356", "e5693"]}
-    # db.insert_one(post)
-    print(get_lecture_hall('ACEX554'))
+    main('rohan-testing', 'ACEX554', 'grades')
