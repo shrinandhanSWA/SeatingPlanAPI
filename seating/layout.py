@@ -1,16 +1,16 @@
 from subsection import Subsection
 
+
 class Layout:
-    def __init__(self, rows):
-        self.rows = []
+    def __init__(self, subsections):
+        self.subsections = [Subsection(seats) for seats in subsections]
 
-        for row in rows:
-            curr_row = []
-            for subsec in row:
-                curr_row.append(Subsection(subsec['id'], subsec['subsections'], subsec['rotation']))
+    def block_alternate_seats(self):
+        for subsection in self.subsections:
+            subsection.block_alternate_seats()
 
-            self.rows.append(curr_row)
+    def getSubsections(self):
+        return self.subsections
 
-    def getRows(self):
-        return self.rows
-        
+    def toJSON(self):
+        return self.subsections
