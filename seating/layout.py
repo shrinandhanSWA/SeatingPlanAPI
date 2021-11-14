@@ -3,7 +3,7 @@ from subsection import Subsection
 
 class Layout:
     def __init__(self, subsections):
-        self.subsections = [Subsection(seats) for seats in subsections]
+        self.subsections = [Subsection(rows) for rows in subsections]
 
     def block_alternate_seats(self):
         for subsection in self.subsections:
