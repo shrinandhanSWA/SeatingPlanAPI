@@ -8,6 +8,12 @@ class Student:
     def __str__(self):
         return self.username
 
+    def to_json(self):
+        return self.__dict__
+        
+    def get_username(self):
+        return self.username
+
     def get_predicted_grade(self):
         return self.predicted_grade
 
