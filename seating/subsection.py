@@ -4,7 +4,7 @@ class Subsection:
     def __init__(self, rows):
         self.rows = [[Seat(seat['seatNo']) for seat in row ] for row in rows]
 
-    def toJSON(self):
+    def to_json(self):
         return self.seats
 
     def allocate_seats(self, people):
@@ -31,3 +31,12 @@ class Subsection:
             while i < len(row):
                 row[i].set_unavailable()
                 i += 2
+    
+    def get_seat_mapping(self):
+        seats = {}
+
+        for row in self.rows:
+            for seat in row:
+                seats[seat.get_seat_no()] = seat.get_occupant().get_username()
+        
+        return seats
