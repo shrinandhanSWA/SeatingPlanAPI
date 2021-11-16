@@ -4,6 +4,12 @@ class Seat:
         self.available = True
         self.occupant = None
 
+    def get_occupant(self):
+        return self.occupant
+        
+    def get_seat_no(self):
+        return self.seat_no
+
     def is_available(self):
         return self.available
 
