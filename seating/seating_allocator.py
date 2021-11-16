@@ -27,7 +27,7 @@ def allocate_seats(self, layout, people, factors=['random']):
     people = sort_people(people)
     remaining = people
 
-    for subsection in layout.getSubsections():
+    for subsection in layout.get_subsections():
         remaining = subsection.allocate_seats(remaining)
 
         if not remaining:
