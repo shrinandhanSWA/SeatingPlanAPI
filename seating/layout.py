@@ -9,8 +9,16 @@ class Layout:
         for subsection in self.subsections:
             subsection.block_alternate_seats()
 
-    def getSubsections(self):
+    def get_subsections(self):
         return self.subsections
 
-    def toJSON(self):
+    def to_json(self):
         return self.subsections
+
+    def get_seat_mapping(self):
+        seats = {}
+
+        for subsection in self.subsections:
+            seats.update(subsection.get_seat_mapping())
+
+        return seats
