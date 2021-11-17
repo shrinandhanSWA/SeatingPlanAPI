@@ -14,9 +14,12 @@ def index():
 
         seating = main(module, str(lecture_hall), filters)
 
-
-        result = {"status": "success", "layout": seating, "module": module, "lecture_hall": lecture_hall, "filters": filters}
-        return jsonify(result)
+        if seating:
+            result = {"status": "success", "layout": seating}
+            return jsonify(result)
+        else:
+            result = {"status": "failure", "reason": "not enough seats for the students"}
+            return jsonify(result)
     else:
         return jsonify({'Error': "This is a GET API method"})
 

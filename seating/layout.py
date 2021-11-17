@@ -1,4 +1,4 @@
-from subsection import Subsection
+from seating.subsection import Subsection
 
 
 class Layout:
