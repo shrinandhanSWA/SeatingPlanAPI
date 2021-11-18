@@ -11,8 +11,8 @@ class Subsection:
 
         for row in rows:
             this_row = []
-            for _ in row:
-                seat = Seat(count)
+            for content in row:
+                seat = Seat(count) if content != 'null' else Seat(-1)
                 this_row.append(seat)
                 count += 1
 
@@ -33,7 +33,7 @@ class Subsection:
 
         for row in self.rows:
             for seat in row:
-                if seat.is_available():
+                if seat.is_available() and seat.get_seat_no() != -1:
                     if not people:
                         return []
                     seat.set_occupant(people.pop())

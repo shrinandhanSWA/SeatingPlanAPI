@@ -2,7 +2,7 @@ class Seat:
     def __init__(self, seat_no):
         self.seat_no = seat_no
         self.available = True
-        self.occupant = None
+        self.occupant = 'empty'
 
     def get_occupant(self):
         return self.occupant

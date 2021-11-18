@@ -37,8 +37,18 @@ def generate_layout(layout, lecture_hall):
 
             for k, _ in enumerate(row):
                 seat = layout.get_subsections()[i].get_rows()[j][k]
-                occupant = seat.get_occupant()
-                row_output.append(occupant.get_username() if occupant else "empty")
+
+                occupant = None
+                name = None
+
+                if seat.get_seat_no() != -1:
+                    occupant = seat.get_occupant()
+                    if occupant == 'empty':
+                        name = 'empty'
+                    else:
+                        name = occupant.get_username()
+
+                row_output.append(name if occupant else "null")
 
             sub_output.append(row_output)
 
