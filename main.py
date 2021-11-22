@@ -8,13 +8,40 @@ client = MongoClient(
 db = client.myFirstDatabase
 
 
-def get_lecture_hall(lecture_hall, db):
-    halls = db["lecture_halls"]
+def get_lecture_hall(lecture_hall, db, module):
 
-    hall = halls.find({"name": lecture_hall})
+    lecture_halls = get_module(module, db)["lectureHalls"]
 
-    for h in hall:
-        return h["layout"]
+    hall = None
+
+    for hal in lecture_halls:
+        if hal["name"] == lecture_hall:
+            hall = hal
+            break
+
+    if not hall:
+        # hall not found
+        return -1
+
+    seats = hall["seatLayout"]
+
+    out = []
+
+    for seat in seats:
+        this_subsection_seats = []
+        this_subsection = seat["seats"]
+
+        for row in this_subsection:
+            this_row = []
+
+            for seat in row:
+                this_row.append('empty')
+
+            this_subsection_seats.append(this_row)
+
+        out.append(this_subsection_seats)
+
+    return out
 
 
 def get_module(module, db):
@@ -23,7 +50,7 @@ def get_module(module, db):
     students = module_db.find({"slug": module})
 
     for student in students:
-        return student["students"]
+        return student
 
 
 def generate_layout(layout, lecture_hall):
@@ -64,13 +91,16 @@ def main(module, lecture_hall, filters):
     db = client.myFirstDatabase
 
     # get lecture hall
-    lecture_hall = get_lecture_hall(lecture_hall, db)
+    lecture_hall = get_lecture_hall(lecture_hall, db, module)
+
+    if lecture_hall == -1:
+        return -1
 
     # generate layout from lecture hall
     layout = Layout(lecture_hall)
 
     # get list of students taking this module
-    students = get_module(module, db)
+    students = get_module(module, db)["students"]
 
     # turn students into list of people
     people = []
@@ -103,4 +133,4 @@ def main(module, lecture_hall, filters):
 
 
 if __name__ == '__main__':
-    main('nandhu-testing', 'ACEX554', 'nationality')
+    print(main('fds-2', 'nandhus room', 'nationality'))
