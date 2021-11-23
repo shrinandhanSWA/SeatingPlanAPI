@@ -2,8 +2,9 @@ from seating.seat import Seat
 
 
 class Subsection:
-
     def __init__(self, rows):
+        self.rows = []
+        self.seats = {}
 
         count = 0
         build = []
@@ -52,12 +53,3 @@ class Subsection:
             while i < len(row):
                 row[i].set_unavailable()
                 i += 2
-
-    def get_seat_mapping(self):
-        seats = {}
-
-        for row in self.rows:
-            for seat in row:
-                seats[seat.get_seat_no()] = seat.get_occupant().get_username()
-
-        return seats

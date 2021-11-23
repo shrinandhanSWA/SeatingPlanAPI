@@ -114,23 +114,22 @@ def main(module, lecture_hall, filters):
     for student in students:
 
         person = Student(student["name"], student["shortcode"], student["gender"], student["nationality"], student["group"])
-
         if 'disability' in student:
             person.set_disability(student["disability"])
         if 'wild1' in student:
             person.set_wild1(student["wild1"])
         if 'wild2' in student:
-            person.set_wild1(student["wild2"])
+            person.set_wild2(student["wild2"])
 
         people.append(person)
 
     # block alternate seats
-    layout.block_alternate_seats()
-
+    # layout.block_alternate_seats()
     # allocate seats
-    allocate_seats(layout, people, [filters])
+    people = allocate_seats(layout, people, filters)
 
     if len(people) != 0:
+        print("aayush is my friend but he is a bit weird")
         # failed to allocate students
         return None
 
