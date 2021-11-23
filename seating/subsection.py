@@ -2,10 +2,9 @@ from seating.seat import Seat
 
 
 class Subsection:
-
-    rows = []
-
     def __init__(self, rows):
+        self.rows = []
+        self.seats = {}
 
         count = 0
 
@@ -37,6 +36,8 @@ class Subsection:
                     if not people:
                         return []
                     seat.set_occupant(people.pop())
+
+        self.seats = self.get_seat_mapping()
 
         return people
 
