@@ -26,23 +26,50 @@ def evenly_spaced(iterables):
 
 
 def sort_people(people, factors):
+    once = False
+    optimal = people
     random.shuffle(people)
 
-    if 'random' in factors:
-        optimal_random = people
-        return optimal_random
-
-    if 'gender' in factors:
-        optimal_gender = evenly_spaced(group_by(people, 'gender'))
-        return optimal_gender
+    if 'group' in factors:
+        people.sort(key=lambda student: student.get_group())
+        return people
 
     if 'nationality' in factors:
-        optimal_nationality = evenly_spaced(group_by(people, 'nationality'))
-        return optimal_nationality
+        optimal = evenly_spaced(group_by(people, 'nationality'))
+        once = True
 
-    if 'group' in factors: # TODO: Cluster rather than go apart
-        optimal_groups = group_by(people, 'group')
-        return optimal_groups
+    if 'gender' in factors:
+        if once:
+            # special function to distribute again
+            out = []
+
+            # get size of people, and split into 20
+            size = len(people)
+            divs = size // 20
+
+            for i in range(divs):
+                # partition this shard
+                this_shard = optimal[i * 20: (i + 1) * 20]
+
+                # sort this shard
+                optimal_shard = evenly_spaced(group_by(this_shard, 'gender'))
+
+                # add shard in order back to out
+                out.extend(optimal_shard)
+
+            # deal with remaining people(rem)
+            this_shard = people[divs * 20:]
+
+            # sort this shard
+            optimal_shard = evenly_spaced(group_by(this_shard, 'gender'))
+
+            # add shard in order back to out
+            out.extend(optimal_shard)
+
+            return out
+        else:
+            optimal = evenly_spaced(group_by(people, 'gender'))
+            once = True
 
     if 'wildCard1' in factors:
         optimal_wc1 = evenly_spaced(group_by(people, 'wildCard1'))
@@ -52,7 +79,7 @@ def sort_people(people, factors):
         optimal_wc2 = evenly_spaced(group_by(people, 'wildCard2'))
         return optimal_wc2
 
-    return people
+    return optimal
 
 
 def allocate_seats(layout, people, factors):

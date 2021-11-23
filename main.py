@@ -73,7 +73,9 @@ def generate_layout(layout, lecture_hall):
                     if occupant == 'empty':
                         name = 'empty'
                     else:
-                        name = occupant.get_username()
+                        name = {"name": occupant.get_name(), "username": occupant.get_username(),
+                                        "gender": occupant.get_gender(), "nationality": occupant.get_nationality(),
+                                        "group": occupant.get_group()}
 
                 row_output.append(name if occupant else "null")
 
@@ -140,4 +142,4 @@ def main(module, lecture_hall, filters):
 
 
 if __name__ == '__main__':
-    print(main('c1234-2', 'ACEX554', 'nationality'))
+    print(main('c1234-2', 'ACEX554', 'nationality,gender'))
