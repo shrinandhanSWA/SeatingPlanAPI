@@ -1,10 +1,13 @@
 class Student:
-    def __init__(self, first_name, last_name, username, nationality=None, predicted_grade=None):
-        self.first_name = first_name
-        self.last_name = last_name
+    def __init__(self, name, username, gender, nationality, group, disability=None, wild1=None, wild2=None):
+        self.name = name
         self.username = username
         self.nationality = nationality
-        self.predicted_grade = predicted_grade
+        self.gender = gender
+        self.group = group
+        self.disability = disability
+        self.wild1 = wild1
+        self.wild2 = wild2
 
     def __str__(self):
         return self.username
@@ -15,14 +18,29 @@ class Student:
     def get_username(self):
         return self.username
 
-    def get_predicted_grade(self):
-        return self.predicted_grade
+    def get_wild1(self):
+        return self.wild1
+
+    def get_wild2(self):
+        return self.wild2
 
     def get_nationality(self):
         return self.nationality
 
-    def set_nationality(self, nationality):
-        self.nationality = nationality
+    def get_disability(self):
+        return self.disability
 
-    def set_predicted_grade(self, grade):
-        self.predicted_grade = grade
+    def get_group(self):
+        return self.group
+
+    def get_gender(self):
+        return self.gender
+
+    def set_disability(self, disability):
+        self.disability = disability
+
+    def set_wild1(self, wild1):
+        self.wild1 = wild1
+
+    def set_wild2(self, wild2):
+        self.wild1 = wild2

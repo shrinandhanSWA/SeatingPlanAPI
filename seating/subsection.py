@@ -3,20 +3,22 @@ from seating.seat import Seat
 
 class Subsection:
 
-    rows = []
-
     def __init__(self, rows):
 
         count = 0
+        build = []
 
         for row in rows:
             this_row = []
-            for content in row:
-                seat = Seat(count) if content != 'null' else Seat(-1)
+            for _ in row:
+                seat = Seat(count)
                 this_row.append(seat)
                 count += 1
 
-            self.rows.append(this_row)
+            build.append(this_row)
+
+        self.rows = build
+
 
     def to_json(self):
         return self.seats

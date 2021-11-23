@@ -84,11 +84,17 @@ def generate_layout(layout, lecture_hall):
     return output
 
 
+def get_filters(filters):
+    return filters.split(',')
+
+
 def main(module, lecture_hall, filters):
-    # get list of students
     client = MongoClient(
         "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
     db = client.myFirstDatabase
+
+    # parse given filters
+    filters = get_filters(filters)
 
     # get lecture hall
     lecture_hall = get_lecture_hall(lecture_hall, db, module)
@@ -107,12 +113,14 @@ def main(module, lecture_hall, filters):
 
     for student in students:
 
-        person = Student(student["name"], student["last_name"], student["shortcode"])
+        person = Student(student["name"], student["shortcode"], student["gender"], student["nationality"], student["group"])
 
-        if 'grade' in student:
-            person.set_predicted_grade(student["grade"])
-        if 'nationality' in student:
-            person.set_nationality(student["nationality"])
+        if 'disability' in student:
+            person.set_disability(student["disability"])
+        if 'wild1' in student:
+            person.set_wild1(student["wild1"])
+        if 'wild2' in student:
+            person.set_wild1(student["wild2"])
 
         people.append(person)
 
@@ -133,4 +141,4 @@ def main(module, lecture_hall, filters):
 
 
 if __name__ == '__main__':
-    print(main('fds-2', 'nandhus room', 'nationality'))
+    print(main('c1234-2', 'ACEX554', 'nationality'))
