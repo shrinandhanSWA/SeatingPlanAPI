@@ -1,5 +1,5 @@
 class Student:
-    def __init__(self, name, username, gender, nationality, group, disability=None, wildCard1=None, wildCard2=None):
+    def __init__(self, name, username, gender, nationality, group, disability=False, wildcard=False):
         self.name = name
         self.username = username
         self.gender = gender
@@ -7,8 +7,7 @@ class Student:
         self.gender = gender
         self.group = group
         self.disability = disability
-        self.wildCard1 = wildCard1
-        self.wildCard2 = wildCard2
+        self.wildcard = wildcard
 
     def to_json(self):
         return self.__dict__
@@ -17,7 +16,7 @@ class Student:
         return self.username
 
     def get_wild1(self):
-        return self.wildCard1
+        return self.wildcard
 
     def get_name(self):
         return self.name
@@ -41,7 +40,7 @@ class Student:
         self.disability = disability
 
     def set_wild1(self, wild1):
-        self.wildCard1 = wild1
+        self.wildcard = wild1
 
     def set_wild2(self, wild2):
         self.wildCard2 = wild2
@@ -51,3 +50,6 @@ class Student:
 
     def __lt__(self, student):
         return self.username < student.username
+
+    def __repr__(self):
+        return self.username
