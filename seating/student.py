@@ -39,11 +39,11 @@ class Student:
     def set_disability(self, disability):
         self.disability = disability
 
-    def set_wild1(self, wild1):
-        self.wildcard = wild1
+    def set_wildcard(self):
+        self.wildcard = True
 
-    def set_wild2(self, wild2):
-        self.wildCard2 = wild2
+    def is_wildcard(self):
+        return self.wildcard
 
     def is_male(self):
         return self.gender == 'Male'
