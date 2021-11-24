@@ -19,7 +19,7 @@ class Subsection:
             build.append(this_row)
 
         self.rows = build
-
+        self.total_seats = count
 
     def to_json(self):
         return self.seats
@@ -42,6 +42,9 @@ class Subsection:
                     seat.set_occupant(people.pop())
 
         return people
+
+    def get_total_seats(self):
+        return self.total_seats
 
     def block_alternate_seats(self):
         """
