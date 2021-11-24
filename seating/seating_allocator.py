@@ -71,8 +71,8 @@ def sort_people(people, factors):
             optimal = evenly_spaced(group_by(people, 'gender'))
             once = True
 
-    if 'wildCard1' in factors:
-        optimal_wc1 = evenly_spaced(group_by(people, 'wildCard1'))
+    if 'wildcard' in factors:
+        optimal_wc1 = evenly_spaced(group_by(people, 'wildcard'))
         return optimal_wc1
 
     if 'wildCard2' in factors:
@@ -89,6 +89,10 @@ def allocate_seats(layout, people, factors):
     :return: list of people that could not be allocated seats
     """
     people = sort_people(people, factors)
+    n = len(people)
+    total_seats = layout.get_total_seats()
+    people = evenly_spaced([people, [None] * max(0, (total_seats - n))])
+
     remaining = people
 
     for subsection in layout.get_subsections():
@@ -155,34 +159,30 @@ def load_sample_data():
         next(rows)
         for [username, name, group, disability, gender, nationality, wc_acc, wc_py] \
                 in rows:
-
-            first_name = name.split(' ')[0]
-            last_name = name.split(' ')[0]
-            students.append(Student(first_name, last_name, username, gender=gender,
-                                    nationality=nationality, disability_exception=disability != '',
-                                    wildcard_accountant=wc_acc, wildcard_python=wc_py,
-                                    group_name=group))
+            students.append(Student(name, username, gender, nationality, group,
+                                    disability=disability == 'Y',
+                                    wildcard=wc_acc == 'Y' or wc_py == 'Y'))
 
     return students
 
 
 if __name__ == "__main__":
     from student import Student
-    students = load_sample_data()
-    # print(students)
-    students1 = [Student('A1', 'A2', 'A', 'Female'),
-                Student('B1', 'A2', 'B', 'Male'),
-                Student('C1', 'A2', 'C', 'Female'),
-                Student('D1', 'A2', 'D', 'Male')]
-    #
-    for radius in range(1, 10):
-        print(f'radius={radius}')
-        for factor in 'random', 'gender', 'predicted_grade', 'nationality':
-            # print(factor)
-            people = sort_people(students, factors=[factor])
-            # if factor != 'random':
-            #     print(list(map(lambda p: getattr(p, factor), people)))
-            # print('sorted', people)
-            print(f'{factor} = {evaluate_ordering(people.copy())}')
 
-        print('=' * 10)
+    students = load_sample_data()
+
+    n = len(students)
+    total_seats = n + 10
+    people = evenly_spaced([students, [None] * max(0, (total_seats - n))])
+    print(people)
+    # for radius in range(1, 10):
+    #     print(f'radius={radius}')
+    #     for factor in 'random', 'gender', 'predicted_grade', 'nationality':
+    #         # print(factor)
+    #         people = sort_people(students, factors=[factor])
+    #         # if factor != 'random':
+    #         #     print(list(map(lambda p: getattr(p, factor), people)))
+    #         # print('sorted', people)
+    #         print(f'{factor} = {evaluate_ordering(people.copy())}')
+    #
+    #     print('=' * 10)
