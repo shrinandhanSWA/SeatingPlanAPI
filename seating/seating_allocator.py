@@ -72,12 +72,10 @@ def sort_people(people, factors):
             once = True
 
     if 'wildcard' in factors:
-        optimal_wc1 = evenly_spaced(group_by(people, 'wildcard'))
-        return optimal_wc1
-
-    if 'wildCard2' in factors:
-        optimal_wc2 = evenly_spaced(group_by(people, 'wildCard2'))
-        return optimal_wc2
+        wildcards = filter(lambda p: p.is_wildcard())
+        non_wildcards = filter(lambda p: not p.is_wildcard())
+        optimal_wc = evenly_spaced([non_wildcards, wildcards])
+        return optimal_wc
 
     return optimal
 
