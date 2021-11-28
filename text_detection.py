@@ -9,7 +9,7 @@ from seating.subsection import Subsection
 from seating.layout import Layout
 
 
-def matrix_representation(number_of_seats, image_location, result_image_location="result.png"):
+def matrix_representation(number_of_seats, image_location, result_image_location):
     seats = {}
     for i in range(1, number_of_seats):
         seats[i] = []
@@ -96,10 +96,14 @@ def matrix_representation(number_of_seats, image_location, result_image_location
         cv2.rectangle(img_org, (x, y), (width + x, height + y), (0, 0, 255), 3)
         cv2.putText(img_org, str(seat_number), (x, y), cv2.FONT_HERSHEY_COMPLEX, 1, (50, 50, 255), 2)
 
-    cv2.imwrite(result_image_location, img_org)
+    if result_image_location:
+        cv2.imwrite(result_image_location, img_org)
 
     return matrix
 
+# generate matrix and create layout
+def image_to_layout(number_of_seats, image_location, result_image_location):
+    return layout(matrix_representation(number_of_seats, image_location, result_image_location))
 
 # create layout from generated matrix
 def layout(generated_matrix):
@@ -138,12 +142,14 @@ def create_subsections(generated_matrix):
             subsection = []
     return subsections
 
+
 # turn numpy array of numpy arrays to list of list
 def numpy_to_list(subsection):
     integer_subsection = []
     for row in subsection:
         integer_subsection.append(row.astype(int).tolist())
     return integer_subsection
+
 
 # set zeros to -1 in rows of the subsection
 def set_zeros_to_minus(subsection):
@@ -153,6 +159,7 @@ def set_zeros_to_minus(subsection):
             if row[column] == 0:
                 row[column] = -1
     return updated_subsection
+
 
 if __name__ == '__main__':
     np.set_printoptions(precision=3)

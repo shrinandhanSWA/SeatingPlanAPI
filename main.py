@@ -2,6 +2,7 @@ from pymongo import MongoClient
 from seating.layout import Layout
 from seating.seating_allocator import allocate_seats
 from seating.student import Student
+from text_detection import image_to_layout
 
 client = MongoClient(
     "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
@@ -90,7 +91,7 @@ def get_filters(filters):
     return filters.split(',')
 
 
-def main(module, lecture_hall, filters):
+def main(module, filters, lecture_hall=None, number_of_seats=None, image_location=None, result_image_location=None):
     client = MongoClient(
         "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
     db = client.myFirstDatabase
@@ -98,14 +99,20 @@ def main(module, lecture_hall, filters):
     # parse given filters
     filters = get_filters(filters)
 
-    # get lecture hall
-    lecture_hall = get_lecture_hall(lecture_hall, db, module)
+    layout = None
 
-    if lecture_hall == -1:
-        return -1
+    if lecture_hall:
+        # get lecture hall
+        lecture_hall = get_lecture_hall(lecture_hall, db, module)
 
-    # generate layout from lecture hall
-    layout = Layout(lecture_hall)
+        if lecture_hall == -1:
+            return -1
+
+        # generate layout from lecture hall
+        layout = Layout(lecture_hall)
+
+    else:
+        layout = image_to_layout(number_of_seats, image_location, result_image_location)
 
     # get list of students taking this module
     students = get_module(module, db)["students"]
