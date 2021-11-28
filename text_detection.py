@@ -104,24 +104,55 @@ def matrix_representation(number_of_seats, image_location, result_image_location
 # create layout from generated matrix
 def layout(generated_matrix):
     subsections = []
-    transformed_matrix = transform(generated_matrix)
-    for row in transformed_matrix:
-        subsections.append(Subsection(row))
+    row_groups = transform(generated_matrix)
+    for group in row_groups:
+        subsections.append(Subsection(group))
     return Layout(subsections)
 
 
 # transforms generated matrix after text detection to a the form that is required when creating a layout
 def transform(generated_matrix):
-    integer_matrix = []
-    for row in generated_matrix.transpose:
-        integer_matrix.append(row.astype(int).tolist())
+    subsections = create_subsections(generated_matrix)
 
-    for row in integer_matrix:
+    integer_subsections = []
+    for subsection in subsections:
+        integer_subsections.append(numpy_to_list(subsection))
+
+    updated_subsections = []
+    for subsection in integer_subsections:
+        updated_subsections.append(set_zeros_to_minus(subsection))
+
+    return updated_subsections
+
+
+# delete all zero rows and create subsections of rows
+def create_subsections(generated_matrix):
+    subsections = []
+    subsection = []
+    for row in generated_matrix.transpose:
+        if np.any(row):
+            subsection.append(row)
+        else:
+            if len(subsection) > 0:
+                subsections.append(subsection)
+            subsection = []
+    return subsections
+
+# turn numpy array of numpy arrays to list of list
+def numpy_to_list(subsection):
+    integer_subsection = []
+    for row in subsection:
+        integer_subsection.append(row.astype(int).tolist())
+    return integer_subsection
+
+# set zeros to -1 in rows of the subsection
+def set_zeros_to_minus(subsection):
+    updated_subsection = subsection.copy()
+    for row in updated_subsection:
         for column in range(0, len(row)):
             if row[column] == 0:
                 row[column] = -1
-
-    return integer_matrix
+    return updated_subsection
 
 if __name__ == '__main__':
     np.set_printoptions(precision=3)
