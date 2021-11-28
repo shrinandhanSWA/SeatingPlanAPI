@@ -108,7 +108,6 @@ def evaluate_ordering(people, radius=1):
     global_avg_predicted_grade = sum(map(lambda p: p.get_predicted_grade(), people)) / n
 
     global_gender_ratio = len(list(filter(lambda p: p.is_male(), people))) / n
-    # print('global_gender_ratio', global_gender_ratio)
     nationalities = collections.Counter(map(lambda p: p.get_predicted_grade(), people))
     global_nationality_ratios = {k: v / n for k, v in nationalities.items()}
 
@@ -120,31 +119,25 @@ def evaluate_ordering(people, radius=1):
     for i in range(radius, len(people) - radius):
         section = people[i - radius: i + radius + 1]
         total_score += evaluate_section(section, global_avg_predicted_grade,
-                                        global_nationality_ratios, global_gender_ratio,
-                                        avg_group_size)
+                                        global_nationality_ratios, global_gender_ratio)
 
     return 100 + total_score
 
 
 def evaluate_section(section, global_avg_predicted_grade,
-                     global_nationality_ratios, global_gender_ratio,
-                     avg_group_size):
+                     global_nationality_ratios, global_gender_ratio):
     n = len(section)
     score = 0
     avg_predicted_grade = sum(map(lambda p: p.get_predicted_grade(), section)) / n
     score -= (avg_predicted_grade - global_avg_predicted_grade) ** 2
 
     gender_ratio = len(list(filter(lambda p: p.is_male(), section))) / n
-    # print(gender_ratio)
     score -= (global_gender_ratio - gender_ratio) ** 2
-    #
+
     nationalities = collections.Counter(map(lambda p: p.get_predicted_grade(), section))
     nationality_ratios = {k: v / n for k, v in nationalities.items()}
     score -= sum(map(lambda nat: (nationality_ratios[nat] - global_nationality_ratios[nat]) ** 2,
                      nationalities.keys()))
-    #
-    # groups = collections.Counter(map(lambda p: p.get_group_name(), section))
-    # score += max(groups.values()) / n
 
     return score
 
