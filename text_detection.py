@@ -106,7 +106,7 @@ def layout(generated_matrix):
     subsections = []
     row_groups = transform(generated_matrix)
     for group in row_groups:
-        subsections.append(Subsection(group))
+        subsections.append(Subsection(group, generated=True))
     return Layout(subsections)
 
 
