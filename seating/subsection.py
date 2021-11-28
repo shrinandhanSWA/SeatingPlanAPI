@@ -2,7 +2,7 @@ from seating.seat import Seat
 
 
 class Subsection:
-    def __init__(self, rows):
+    def __init__(self, rows, generated=False):
         self.rows = []
         self.seats = {}
 
@@ -11,8 +11,8 @@ class Subsection:
 
         for row in rows:
             this_row = []
-            for _ in row:
-                seat = Seat(count)
+            for seat_no in row:
+                seat = Seat(seat_no if generated else count)
                 this_row.append(seat)
                 count += 1
 

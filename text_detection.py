@@ -5,7 +5,11 @@ import numpy as np
 from statistics import mean
 import sys
 
-def matrix_representation(number_of_seats, image_location, result_image_location):
+from seating.subsection import Subsection
+from seating.layout import Layout
+
+
+def matrix_representation(number_of_seats, image_location, result_image_location="result.png"):
     seats = {}
     for i in range(1, number_of_seats):
         seats[i] = []
@@ -69,7 +73,8 @@ def matrix_representation(number_of_seats, image_location, result_image_location
                 revised_seats[seat_number] = (x, y, width, height)
 
     # matrix according to coordinates
-    average_width = mean(sorted(widths, key=widths.get, reverse=True)[:3]) * 2  # multiply 1.5 to add space between seats.
+    average_width = mean(
+        sorted(widths, key=widths.get, reverse=True)[:3]) * 2  # multiply 1.5 to add space between seats.
     average_height = mean(
         sorted(heights, key=heights.get, reverse=True)[:3]) * 2  # multiply 1.5 to add space between seats.
 
@@ -94,6 +99,29 @@ def matrix_representation(number_of_seats, image_location, result_image_location
     cv2.imwrite(result_image_location, img_org)
 
     return matrix
+
+
+# create layout from generated matrix
+def layout(generated_matrix):
+    subsections = []
+    transformed_matrix = transform(generated_matrix)
+    for row in transformed_matrix:
+        subsections.append(Subsection(row))
+    return Layout(subsections)
+
+
+# transforms generated matrix after text detection to a the form that is required when creating a layout
+def transform(generated_matrix):
+    integer_matrix = []
+    for row in generated_matrix.transpose:
+        integer_matrix.append(row.astype(int).tolist())
+
+    for row in integer_matrix:
+        for column in range(0, len(row)):
+            if row[column] == 0:
+                row[column] = -1
+
+    return integer_matrix
 
 if __name__ == '__main__':
     np.set_printoptions(precision=3)
