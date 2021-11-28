@@ -1,5 +1,4 @@
 import random
-
 import itertools
 import collections
 
@@ -33,6 +32,12 @@ def sort_people(people, factors):
     if 'group' in factors:
         people.sort(key=lambda student: student.get_group())
         return people
+
+    if 'wildcard' in factors:
+        wildcards = filter(lambda p: p.is_wildcard())
+        non_wildcards = filter(lambda p: not p.is_wildcard())
+        optimal_wc = evenly_spaced([non_wildcards, wildcards])
+        return optimal_wc
 
     if 'nationality' in factors:
         optimal = evenly_spaced(group_by(people, 'nationality'))
@@ -71,12 +76,6 @@ def sort_people(people, factors):
             optimal = evenly_spaced(group_by(people, 'gender'))
             once = True
 
-    if 'wildcard' in factors:
-        wildcards = filter(lambda p: p.is_wildcard())
-        non_wildcards = filter(lambda p: not p.is_wildcard())
-        optimal_wc = evenly_spaced([non_wildcards, wildcards])
-        return optimal_wc
-
     return optimal
 
 
@@ -89,6 +88,8 @@ def allocate_seats(layout, people, factors):
     people = sort_people(people, factors)
     n = len(people)
     total_seats = layout.get_total_seats()
+
+    # to ensure that the entire lecture theatre is filled evenly
     people = evenly_spaced([people, [None] * max(0, (total_seats - n))])
 
     remaining = people
@@ -103,40 +104,34 @@ def allocate_seats(layout, people, factors):
     return remaining
 
 
-def evaluate_ordering(people, radius=1):
+def fitness(people, radius=1):
     n = len(people)
-    global_avg_predicted_grade = sum(map(lambda p: p.get_predicted_grade(), people)) / n
-
+    # global_avg_predicted_grade = sum(map(lambda p: p.get_predicted_grade(), people)) / n
+    global_avg_predicted_grade = 2
     global_gender_ratio = len(list(filter(lambda p: p.is_male(), people))) / n
     nationalities = collections.Counter(map(lambda p: p.get_predicted_grade(), people))
     global_nationality_ratios = {k: v / n for k, v in nationalities.items()}
 
     groups = collections.Counter(map(lambda p: p.get_group_name(), people))
-    avg_group_size = sum(groups.values()) / len(groups)
 
     total_score = 0
 
     for i in range(radius, len(people) - radius):
         section = people[i - radius: i + radius + 1]
-        total_score += evaluate_section(section, global_avg_predicted_grade,
-                                        global_nationality_ratios, global_gender_ratio)
+        total_score += evaluate_section(section, global_nationality_ratios, global_gender_ratio)
 
-    return 100 + total_score
+    return total_score
 
 
-def evaluate_section(section, global_avg_predicted_grade,
-                     global_nationality_ratios, global_gender_ratio):
+def evaluate_section(section, global_nationality_ratios, global_gender_ratio):
     n = len(section)
     score = 0
-    avg_predicted_grade = sum(map(lambda p: p.get_predicted_grade(), section)) / n
-    score -= (avg_predicted_grade - global_avg_predicted_grade) ** 2
-
     gender_ratio = len(list(filter(lambda p: p.is_male(), section))) / n
-    score -= (global_gender_ratio - gender_ratio) ** 2
+    score -= abs(global_gender_ratio - gender_ratio)
 
     nationalities = collections.Counter(map(lambda p: p.get_predicted_grade(), section))
     nationality_ratios = {k: v / n for k, v in nationalities.items()}
-    score -= sum(map(lambda nat: (nationality_ratios[nat] - global_nationality_ratios[nat]) ** 2,
+    score -= sum(map(lambda nat: abs(nationality_ratios[nat] - global_nationality_ratios[nat]),
                      nationalities.keys()))
 
     return score
@@ -157,23 +152,43 @@ def load_sample_data():
     return students
 
 
+def mutate(people, swap=0.25):
+    people = people.copy()
+    for i in range(int(len(people) * swap)):
+        index = random.randint(1, len(people) - 1)
+        people[index], people[index - 1] = people[index - 1], people[index]
+
+    return people
+
+
+def evolution_strategy(orderings, mu=3, lambda_=3, epoch=5, radius=5):
+    swap = 0.1
+
+    for i in range(epoch):
+        orderings.sort(key=lambda people: fitness(people, radius=radius))
+        print(list(map(lambda people: fitness(people, radius=radius), orderings)))
+        parents = orderings[-mu:]
+        children = []
+
+        for i in range(lambda_):
+            index = random.randint(0, mu - 1)
+            children.append(mutate(parents[index], swap=swap))
+
+        orderings = [parents[-1]] + children
+
+    return max(orderings, key=lambda people: fitness(people, radius=radius))
+
+
 if __name__ == "__main__":
     from student import Student
 
     students = load_sample_data()
+    radius = int(len(students) * 0.2)
+    orderings = []
+    for factor in 'random', 'gender', 'predicted_grade', 'nationality':
+        people = sort_people(students, factors=[factor])
+        orderings.append(people.copy())
+        print(f'{factor} = {fitness(people.copy(), radius=radius)}')
 
-    n = len(students)
-    total_seats = n + 10
-    people = evenly_spaced([students, [None] * max(0, (total_seats - n))])
-    print(people)
-    # for radius in range(1, 10):
-    #     print(f'radius={radius}')
-    #     for factor in 'random', 'gender', 'predicted_grade', 'nationality':
-    #         # print(factor)
-    #         people = sort_people(students, factors=[factor])
-    #         # if factor != 'random':
-    #         #     print(list(map(lambda p: getattr(p, factor), people)))
-    #         # print('sorted', people)
-    #         print(f'{factor} = {evaluate_ordering(people.copy())}')
-    #
-    #     print('=' * 10)
+    optimal = evolution_strategy(orderings)
+    print(f'optimal = {fitness(optimal, radius=radius)}')
