@@ -15,14 +15,8 @@ class Student:
     def get_username(self):
         return self.username
 
-    def get_wild1(self):
-        return self.wildcard
-
     def get_name(self):
         return self.name
-
-    def get_wild2(self):
-        return self.wildCard2
 
     def get_nationality(self):
         return self.nationality
@@ -47,6 +41,9 @@ class Student:
 
     def is_male(self):
         return self.gender == 'Male'
+
+    def get_group_name(self):
+        return self.group
 
     def __lt__(self, student):
         return self.username < student.username
