@@ -91,7 +91,7 @@ def get_filters(filters):
     return filters.split(',')
 
 
-def main(module, filters, lecture_hall=None, number_of_seats=None, image_location=None, result_image_location=None):
+def main(module, filters, lecture_hall=None, number_of_seats=50, image_location=None, result_image_location=None):
     client = MongoClient(
         "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
     db = client.myFirstDatabase

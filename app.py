@@ -11,8 +11,10 @@ def index():
         module = request.args.get('module')
         lecture_hall = request.args.get('lecture_hall')
         filters = request.args.get('filters')
+        #image = request.args.get('filters')
 
         seating = main(module, filters, lecture_hall=str(lecture_hall))
+        #seating = main(module, filters, lecture_hall=str(lecture_hall), image_location=image)
 
         if seating == -1:
             result = {"status": "failure", "reason": "Lecture hall not found"}
