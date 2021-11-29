@@ -9,8 +9,7 @@ client = MongoClient(
 db = client.myFirstDatabase
 
 
-def get_lecture_hall(lecture_hall, db, module):
-
+def get_lecture_hall(lecture_hall, db, module, just=False):
     lecture_halls = get_module(module, db)["lectureHalls"]
 
     hall = None
@@ -24,6 +23,9 @@ def get_lecture_hall(lecture_hall, db, module):
         # hall not found
         return -1
 
+    if just:
+        return hall
+
     seats = hall["seatLayout"]
 
     out = []
@@ -35,7 +37,7 @@ def get_lecture_hall(lecture_hall, db, module):
         for row in this_subsection:
             this_row = []
 
-            for seat in row:
+            for _ in row:
                 this_row.append('empty')
 
             this_subsection_seats.append(this_row)
@@ -75,8 +77,8 @@ def generate_layout(layout, lecture_hall):
                         name = 'empty'
                     else:
                         name = {"name": occupant.get_name(), "username": occupant.get_username(),
-                                        "gender": occupant.get_gender(), "nationality": occupant.get_nationality(),
-                                        "group": occupant.get_group()}
+                                "gender": occupant.get_gender(), "nationality": occupant.get_nationality(),
+                                "group": occupant.get_group()}
 
                 row_output.append(name if occupant else "null")
 
@@ -90,11 +92,40 @@ def generate_layout(layout, lecture_hall):
 def get_filters(filters):
     return filters.split(',')
 
+def generate_seat_numbers(module, lecture_hall, db):
+    hall = get_lecture_hall(lecture_hall, db, module, True)
 
+    seats = hall["seatLayout"]
+    count = 1
+
+    for seat in seats:
+        this_subsection = seat["seats"]
+
+        for row in this_subsection:
+            for seat in row:
+                seat["seat_no"] = count
+                count += 1
+
+    category = get_module(module, db)
+    halls = category["lectureHalls"]
+
+    for hall in halls:
+        if hall["name"] == lecture_hall:
+            hall["seatLayout"] = seats
+
+    this_db = db["categories"]
+    this_db.save(category)
+
+    
 def main(module, filters, lecture_hall=None, number_of_seats=50, image_location=None, result_image_location=None):
     client = MongoClient(
         "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
     db = client.myFirstDatabase
+
+    if filters == 'seat':
+        # seat number generation
+        generate_seat_numbers(module, lecture_hall, db)
+        return []
 
     # parse given filters
     filters = get_filters(filters)
@@ -122,7 +153,8 @@ def main(module, filters, lecture_hall=None, number_of_seats=50, image_location=
 
     for student in students:
 
-        person = Student(student["name"], student["shortcode"], student["gender"], student["nationality"], student["group"])
+        person = Student(student["name"], student["shortcode"], student["gender"], student["nationality"],
+                         student["group"])
         if 'disability' in student:
             person.set_disability(student["disability"])
         if 'wild1' in student:
@@ -138,7 +170,6 @@ def main(module, filters, lecture_hall=None, number_of_seats=50, image_location=
     people = allocate_seats(layout, people, filters)
 
     if len(people) != 0:
-        print("aayush is my friend but he is a bit weird")
         # failed to allocate students
         return None
 
@@ -149,4 +180,8 @@ def main(module, filters, lecture_hall=None, number_of_seats=50, image_location=
 
 
 if __name__ == '__main__':
-    print(main('c1234-2', 'ACEX554', 'nationality,gender'))
+    # print(main('c1234-2', 'ACEX554', 'group,'))
+    client = MongoClient(
+        "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
+    db = client.myFirstDatabase
+    generate_seat_numbers('c1234-2', 'ACEX554', db)
