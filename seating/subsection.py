@@ -6,6 +6,7 @@ class Subsection:
         self.rows = []
         self.seats = {}
 
+        count = 0
         build = []
 
         for row in rows:
@@ -13,6 +14,7 @@ class Subsection:
             for seat_no in row:
                 seat = Seat(seat_no if generated else count)
                 this_row.append(seat)
+                count += 1
 
             build.append(this_row)
 
