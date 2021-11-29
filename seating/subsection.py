@@ -2,24 +2,22 @@ from seating.seat import Seat
 
 
 class Subsection:
-    def __init__(self, rows, generated=False):
+    def __init__(self, rows):
         self.rows = []
         self.seats = {}
 
-        count = 0
         build = []
 
         for row in rows:
             this_row = []
-            for seat_no in row:
-                seat = Seat(seat_no if generated else count)
+            for count in row:
+                seat = Seat(count)
                 this_row.append(seat)
-                count += 1
 
             build.append(this_row)
 
         self.rows = build
-        self.total_seats = count
+
 
     def to_json(self):
         return self.seats
@@ -43,9 +41,6 @@ class Subsection:
                     seat.set_unavailable()
 
         return people
-
-    def get_total_seats(self):
-        return self.total_seats
 
     def block_alternate_seats(self):
         """

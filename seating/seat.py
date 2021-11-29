@@ -6,7 +6,7 @@ class Seat:
 
     def get_occupant(self):
         return self.occupant
-        
+
     def get_seat_no(self):
         return self.seat_no
 
@@ -15,6 +15,6 @@ class Seat:
 
     def set_unavailable(self):
         self.available = False
-        
+
     def set_occupant(self, person):
         self.occupant = person

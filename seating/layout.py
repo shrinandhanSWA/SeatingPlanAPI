@@ -6,14 +6,11 @@ class Layout:
     def __init__(self, subsections):
 
         output = []
-        total_seats = 0
+
         for rows in subsections:
-            subsection = Subsection(rows)
-            total_seats += subsection.get_total_seats()
-            output.append(subsection)
+            output.append(Subsection(rows))
 
         self.subsections = output
-        self.total_seats = total_seats
 
     def block_alternate_seats(self):
         for subsection in self.subsections:
@@ -32,6 +29,3 @@ class Layout:
             seats.update(subsection.get_seat_mapping())
 
         return seats
-
-    def get_total_seats(self):
-        return self.total_seats
