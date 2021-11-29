@@ -37,8 +37,8 @@ def get_lecture_hall(lecture_hall, db, module, just=False):
         for row in this_subsection:
             this_row = []
 
-            for _ in row:
-                this_row.append('empty')
+            for seat1 in row:
+                this_row.append(seat1["seat_no"])
 
             this_subsection_seats.append(this_row)
 
@@ -73,8 +73,8 @@ def generate_layout(layout, lecture_hall):
 
                 if seat.get_seat_no() != -1:
                     occupant = seat.get_occupant()
-                    if occupant == 'empty':
-                        name = 'empty'
+                    if seat.is_available():
+                        name = {"name": occupant, "username": "", "gender": "", "nationality": "", "group": ""}
                     else:
                         name = {"name": occupant.get_name(), "username": occupant.get_username(),
                                 "gender": occupant.get_gender(), "nationality": occupant.get_nationality(),
@@ -180,8 +180,8 @@ def main(module, filters, lecture_hall=None, number_of_seats=50, image_location=
 
 
 if __name__ == '__main__':
-    # print(main('c1234-2', 'ACEX554', 'group,'))
-    client = MongoClient(
-        "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
-    db = client.myFirstDatabase
-    generate_seat_numbers('c1234-2', 'ACEX554', db)
+    print(main('c1234-2', 'ACEX554', 'group,'))
+    # client = MongoClient(
+    #     "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
+    # db = client.myFirstDatabase
+    # generate_seat_numbers('c1234-2', 'ACEX554', db)
