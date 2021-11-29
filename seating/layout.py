@@ -3,12 +3,12 @@ from seating.subsection import Subsection
 
 class Layout:
 
-    def __init__(self, subsections):
+    def __init__(self, subsections, reqs, people):
 
         output = []
 
         for rows in subsections:
-            output.append(Subsection(rows))
+            output.append(Subsection(rows, reqs, people))
 
         self.subsections = output
 

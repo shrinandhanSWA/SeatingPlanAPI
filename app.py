@@ -11,8 +11,9 @@ def index():
         module = request.args.get('module')
         lecture_hall = request.args.get('lecture_hall')
         filters = request.args.get('filters')
+        reqs = request.args.get('reqs')
 
-        seating = main(module, str(lecture_hall), filters)
+        seating = main(module, str(lecture_hall), filters, reqs)
 
         if seating == -1:
             result = {"status": "failure", "reason": "Lecture hall not found"}

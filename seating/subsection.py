@@ -2,7 +2,7 @@ from seating.seat import Seat
 
 
 class Subsection:
-    def __init__(self, rows):
+    def __init__(self, rows, reqs, people):
         self.rows = []
         self.seats = {}
 
@@ -12,6 +12,14 @@ class Subsection:
             this_row = []
             for count in row:
                 seat = Seat(count)
+                if str(count) in reqs:
+                    # find person and set occupant
+                    for person in people:
+                        if person.get_name() == reqs[str(count)]:
+                            seat.set_occupant(person)
+                            seat.set_unavailable()
+                            break
+
                 this_row.append(seat)
 
             build.append(this_row)

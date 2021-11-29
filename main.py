@@ -112,12 +112,26 @@ def generate_seat_numbers(module, lecture_hall, db):
     for hall in halls:
         if hall["name"] == lecture_hall:
             hall["seatLayout"] = seats
+            hall["seatCount"] = count
 
     this_db = db["categories"]
     this_db.save(category)
 
 
-def main(module, lecture_hall, filters):
+def get_reqs(reqs):
+    req_list = reqs.split(',')
+    out = {}
+
+    for req in req_list:
+        if req == '':
+            continue
+        item = req.split('-')
+        out[item[1]] = item[0]
+
+    return out
+
+
+def main(module, lecture_hall, filters, reqs):
     client = MongoClient(
         "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
     db = client.myFirstDatabase
@@ -130,14 +144,14 @@ def main(module, lecture_hall, filters):
     # parse given filters
     filters = get_filters(filters)
 
+    # parse given requirements
+    reqs = get_reqs(reqs)
+
     # get lecture hall
     lecture_hall = get_lecture_hall(lecture_hall, db, module)
 
     if lecture_hall == -1:
         return -1
-
-    # generate layout from lecture hall
-    layout = Layout(lecture_hall)
 
     # get list of students taking this module
     students = get_module(module, db)["students"]
@@ -158,8 +172,23 @@ def main(module, lecture_hall, filters):
 
         people.append(person)
 
+    # generate layout from lecture hall
+    # takes in the reqs and student list to put people in place beforehand
+    layout = Layout(lecture_hall, reqs, people)
+
+    # remove people who have been dealt with in reqs
+    for _, value in reqs.items():
+        # remove person(value) from list
+        for person in people:
+            if person.get_name() == value:
+                people.remove(person)
+
+    # turn layout into list of lists based on input
+    output = generate_layout(layout, lecture_hall)
+
     # block alternate seats
     # layout.block_alternate_seats()
+
     # allocate seats
     people = allocate_seats(layout, people, filters)
 
@@ -174,8 +203,10 @@ def main(module, lecture_hall, filters):
 
 
 if __name__ == '__main__':
-    print(main('c1234-2', 'ACEX554', 'group,'))
+    print(main('c1234-2', 'ACEX554', 'group,', 'Brianna Morrison-1,Gisela Peters-3,'))
     # client = MongoClient(
     #     "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
     # db = client.myFirstDatabase
-    # generate_seat_numbers('c1234-2', 'ACEX554', db)
+    # generate_seat_numbers('c1234-2', 'LT3', db)
+    # print(get_reqs('aayush-1,nandhu-2'))
+    print()
