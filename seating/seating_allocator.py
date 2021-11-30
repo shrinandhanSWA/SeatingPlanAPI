@@ -34,9 +34,42 @@ def sort_people(people, factors):
         people.sort(key=lambda student: student.get_group())
         return people
 
-    if 'nationality' in factors:
-        optimal = evenly_spaced(group_by(people, 'nationality'))
+    if 'wild' in factors:
+        optimal = evenly_spaced(group_by(people, 'wild'))
         once = True
+
+    if 'nationality' in factors:
+        if once:
+            # special function to distribute again
+            out = []
+
+            # get size of people, and split into 20
+            size = len(people)
+            divs = size // 20
+
+            for i in range(divs):
+                # partition this shard
+                this_shard = optimal[i * 20: (i + 1) * 20]
+
+                # sort this shard
+                optimal_shard = evenly_spaced(group_by(this_shard, 'nationality'))
+
+                # add shard in order back to out
+                out.extend(optimal_shard)
+
+            # deal with remaining people(rem)
+            this_shard = people[divs * 20:]
+
+            # sort this shard
+            optimal_shard = evenly_spaced(group_by(this_shard, 'nationality'))
+
+            # add shard in order back to out
+            out.extend(optimal_shard)
+
+            return out
+        else:
+            optimal = evenly_spaced(group_by(people, 'nationality'))
+            once = True
 
     if 'gender' in factors:
         if once:
@@ -71,24 +104,18 @@ def sort_people(people, factors):
             optimal = evenly_spaced(group_by(people, 'gender'))
             once = True
 
-    if 'wildCard1' in factors:
-        optimal_wc1 = evenly_spaced(group_by(people, 'wildCard1'))
-        return optimal_wc1
-
-    if 'wildCard2' in factors:
-        optimal_wc2 = evenly_spaced(group_by(people, 'wildCard2'))
-        return optimal_wc2
-
     return optimal
 
 
-def allocate_seats(layout, people, factors):
+def allocate_seats(layout, people, factors, total_seats):
     """
     Sets random occupant for available seats
     :param people: list of people
     :return: list of people that could not be allocated seats
     """
     people = sort_people(people, factors)
+    n = len(people)
+    people = evenly_spaced([people, [None] * max(0, (total_seats - n))])
     remaining = people
 
     for subsection in layout.get_subsections():

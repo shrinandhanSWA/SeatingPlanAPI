@@ -26,6 +26,7 @@ def get_lecture_hall(lecture_hall, db, module, just=False):
         return hall
 
     seats = hall["seatLayout"]
+    no_seats = hall["seatCount"] - 1
 
     out = []
 
@@ -43,7 +44,7 @@ def get_lecture_hall(lecture_hall, db, module, just=False):
 
         out.append(this_subsection_seats)
 
-    return out
+    return out, no_seats
 
 
 def get_module(module, db):
@@ -77,7 +78,7 @@ def generate_layout(layout, lecture_hall):
                     else:
                         name = {"name": occupant.get_name(), "username": occupant.get_username(),
                                 "gender": occupant.get_gender(), "nationality": occupant.get_nationality(),
-                                "group": occupant.get_group()}
+                                "group": occupant.get_group(), "wild": occupant.get_wild()}
 
                 row_output.append(name if occupant else "null")
 
@@ -93,7 +94,7 @@ def get_filters(filters):
 
 
 def generate_seat_numbers(module, lecture_hall, db):
-    hall = get_lecture_hall(lecture_hall, db, module, True)
+    hall, _ = get_lecture_hall(lecture_hall, db, module, True)
 
     seats = hall["seatLayout"]
     count = 1
@@ -148,7 +149,7 @@ def main(module, lecture_hall, filters, reqs):
     reqs = get_reqs(reqs)
 
     # get lecture hall
-    lecture_hall = get_lecture_hall(lecture_hall, db, module)
+    lecture_hall, no_seats = get_lecture_hall(lecture_hall, db, module)
 
     if lecture_hall == -1:
         return -1
@@ -165,10 +166,8 @@ def main(module, lecture_hall, filters, reqs):
                          student["group"])
         if 'disability' in student:
             person.set_disability(student["disability"])
-        if 'wild1' in student:
-            person.set_wild1(student["wild1"])
-        if 'wild2' in student:
-            person.set_wild2(student["wild2"])
+        if 'wild' in student:
+            person.set_wild(student["wild"])
 
         people.append(person)
 
@@ -183,14 +182,14 @@ def main(module, lecture_hall, filters, reqs):
             if person.get_name() == value:
                 people.remove(person)
 
-    # turn layout into list of lists based on input
-    output = generate_layout(layout, lecture_hall)
-
     # block alternate seats
     # layout.block_alternate_seats()
 
+    # get number of seats in the lecture hall
+    no_seats -= len(reqs)
+
     # allocate seats
-    people = allocate_seats(layout, people, filters)
+    people = allocate_seats(layout, people, filters, no_seats)
 
     if len(people) != 0:
         # failed to allocate students
@@ -203,7 +202,7 @@ def main(module, lecture_hall, filters, reqs):
 
 
 if __name__ == '__main__':
-    print(main('c1234-2', 'ACEX554', 'group,', 'Brianna Morrison-1,Gisela Peters-3,'))
+    print(main('c1234-2', 'ACEX554', 'wild,nationality', 'Brianna Morrison-1,Gisela Peters-3,'))
     # client = MongoClient(
     #     "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
     # db = client.myFirstDatabase

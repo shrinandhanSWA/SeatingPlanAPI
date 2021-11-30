@@ -7,15 +7,17 @@ db = client.myFirstDatabase
 
 # get LT3
 category = get_module('c1234-2', db)
-halls = category["lectureHalls"]
+students = category["students"]
 
 new_hall = {"name": "LTUG"}
 
-for hall in halls:
-  if hall["name"] == 'LT2':
-    new_hall["seatLayout"] = hall["seatLayout"]
+for student in students:
+    if student["wildCard1"] == '' and student["wildCard2"] == '':
+        student["wild"] = 'N'
+    else:
+        student["wild"] = 'Y'
 
-halls.append(new_hall)
+category["students"] = students
 
 this_db = db["categories"]
 this_db.save(category)

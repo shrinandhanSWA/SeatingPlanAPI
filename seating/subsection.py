@@ -45,8 +45,11 @@ class Subsection:
                 if seat.is_available() and seat.get_seat_no() != -1:
                     if not people:
                         return []
-                    seat.set_occupant(people.pop())
-                    seat.set_unavailable()
+                    person = people.pop()
+
+                    if person:
+                        seat.set_occupant(person)
+                        seat.set_unavailable()
 
         return people
 
