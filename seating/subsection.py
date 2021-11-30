@@ -1,18 +1,32 @@
 from seating.seat import Seat
-
+from seating.student import Student
 
 class Subsection:
-    def __init__(self, rows, reqs, people):
+    def __init__(self, rows, reqs, people, blanks):
         self.rows = []
         self.seats = {}
+        self.valid = True
 
         build = []
 
         for row in rows:
+            if not self.valid:
+                break
             this_row = []
             for count in row:
+                this_available = True
                 seat = Seat(count)
+                if str(count) in blanks:
+                    # it is unavailable
+                    # set it to the dummy person we have
+                    seat.set_occupant(Student("fh5", "fh5", "fh5", "fh5", "fh5", real=False))
+                    seat.set_unavailable()
+                    this_available = False
                 if str(count) in reqs:
+                    if not this_available:
+                        # trying to set student into a seat that was blanked out
+                        self.valid = False
+                        break
                     # find person and set occupant
                     for person in people:
                         if person.get_name() == reqs[str(count)]:
@@ -32,6 +46,9 @@ class Subsection:
 
     def get_rows(self):
         return self.rows
+
+    def is_valid(self):
+        return self.valid
 
     def allocate_seats(self, people):
         """

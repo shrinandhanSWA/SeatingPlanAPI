@@ -76,7 +76,8 @@ def generate_layout(layout, lecture_hall):
                     if seat.is_available():
                         name = {"name": occupant, "username": "", "gender": "", "nationality": "", "group": ""}
                     elif occupant is not None and occupant.get_name() == 'fh5':
-                        name = {"name": seat.get_seat_no(), "username": "", "gender": "", "nationality": "", "group": ""}
+                        name = {"name": seat.get_seat_no(), "username": "", "gender": "", "nationality": "",
+                                "group": ""}
                     else:
                         name = {"name": occupant.get_name(), "username": occupant.get_username(),
                                 "gender": occupant.get_gender(), "nationality": occupant.get_nationality(),
@@ -134,7 +135,16 @@ def get_reqs(reqs):
     return out
 
 
-def main(module, lecture_hall, filters, reqs):
+def get_blanks(blanks):
+    blank_list = blanks.split(',')
+    out = set(blank_list)
+
+    out.remove('')
+
+    return out
+
+
+def main(module, lecture_hall, filters, reqs, blanks):
     client = MongoClient(
         "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
     db = client.myFirstDatabase
@@ -146,6 +156,9 @@ def main(module, lecture_hall, filters, reqs):
 
     # parse given filters
     filters = get_filters(filters)
+
+    # parse given blanks
+    blanks = get_blanks(blanks)
 
     # parse given requirements
     reqs = get_reqs(reqs)
@@ -174,8 +187,12 @@ def main(module, lecture_hall, filters, reqs):
         people.append(person)
 
     # generate layout from lecture hall
+    # takes in list of unavailable seats to blank out beforehand
     # takes in the reqs and student list to put people in place beforehand
-    layout = Layout(lecture_hall, reqs, people)
+    layout = Layout(lecture_hall, reqs, people, blanks)
+
+    if not layout.is_valid():
+        return -2  # user entered a bad combo
 
     # remove people who have been dealt with in reqs
     for _, value in reqs.items():
@@ -189,6 +206,7 @@ def main(module, lecture_hall, filters, reqs):
 
     # get number of seats in the lecture hall
     no_seats -= len(reqs)
+    no_seats -= len(blanks)
 
     # allocate seats
     people = allocate_seats(layout, people, filters, no_seats)
@@ -204,7 +222,8 @@ def main(module, lecture_hall, filters, reqs):
 
 
 if __name__ == '__main__':
-    print(main('c1234-2', 'LTUG', 'wild,nationality,', 'Gisela Peters-3,'))
+    print(main('c1234-2', 'LTUG', 'wild,nationality,', 'Gisela Peters-3,', '1,'))
+    # print(get_blanks("1,"))
     # print(main('c1234-2', 'LTUG', 'seat', 'Brianna Morrison-1,Gisela Peters-3,'))
     # client = MongoClient(
     #     "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
