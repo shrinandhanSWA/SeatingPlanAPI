@@ -94,7 +94,7 @@ def get_filters(filters):
 
 
 def generate_seat_numbers(module, lecture_hall, db):
-    hall, _ = get_lecture_hall(lecture_hall, db, module, True)
+    hall = get_lecture_hall(lecture_hall, db, module, True)
 
     seats = hall["seatLayout"]
     count = 1
@@ -202,7 +202,8 @@ def main(module, lecture_hall, filters, reqs):
 
 
 if __name__ == '__main__':
-    print(main('c1234-2', 'ACEX554', 'wild,nationality', 'Brianna Morrison-1,Gisela Peters-3,'))
+    # print(main('c1234-2', 'ACEX554', 'wild,nationality', 'Brianna Morrison-1,Gisela Peters-3,'))
+    print(main('c1234-2', 'LTUG', 'seat', 'Brianna Morrison-1,Gisela Peters-3,'))
     # client = MongoClient(
     #     "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
     # db = client.myFirstDatabase
