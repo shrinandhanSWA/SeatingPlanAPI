@@ -3,6 +3,7 @@ import random
 import itertools
 import collections
 
+from seating.student import Student
 
 def group_by(xs, attr):
     xs = sorted(xs, key=lambda x: getattr(x, attr))
@@ -115,7 +116,10 @@ def allocate_seats(layout, people, factors, total_seats):
     """
     people = sort_people(people, factors)
     n = len(people)
-    people = evenly_spaced([people, [None] * max(0, (total_seats - n))])
+    rem = max(0, (total_seats - n))
+    for _ in range(rem):
+        people.append(Student("fh5", "fh5", "fh5", "fh5", "fh5", real=False))
+    people = evenly_spaced(group_by(people, 'real'))
     remaining = people
 
     for subsection in layout.get_subsections():

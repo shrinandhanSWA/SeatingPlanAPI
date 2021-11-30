@@ -1,5 +1,5 @@
 class Student:
-    def __init__(self, name, username, gender, nationality, group, disability=False, wildcard=False):
+    def __init__(self, name, username, gender, nationality, group, disability=False, wildcard=False, real=True):
         self.name = name
         self.username = username
         self.gender = gender
@@ -8,6 +8,7 @@ class Student:
         self.group = group
         self.disability = disability
         self.wild = wildcard
+        self.real = real
 
     def to_json(self):
         return self.__dict__
@@ -44,6 +45,9 @@ class Student:
 
     def is_male(self):
         return self.gender == 'Male'
+
+    def get_real(self):
+        return self.real
 
     def __lt__(self, student):
         return self.username < student.username
