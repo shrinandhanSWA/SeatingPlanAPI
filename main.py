@@ -4,7 +4,8 @@ from seating.seating_allocator import allocate_seats
 from seating.student import Student
 
 client = MongoClient(
-    "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
+    "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net/"
+    "myFirstDatabase?retryWrites=true&w=majority")
 db = client.myFirstDatabase
 
 
@@ -74,14 +75,19 @@ def generate_layout(layout, lecture_hall):
                 if seat.get_seat_no() != -1:
                     occupant = seat.get_occupant()
                     if seat.is_available():
-                        name = {"name": occupant, "username": "", "gender": "", "nationality": "", "group": ""}
+                        name = {"name": occupant, "username": "", "gender": "",
+                                "nationality": "", "group": ""}
                     elif occupant is not None and occupant.get_name() == 'fh5':
-                        name = {"name": seat.get_seat_no(), "username": "", "gender": "", "nationality": "",
+                        name = {"name": seat.get_seat_no(), "username": "",
+                                "gender": "", "nationality": "",
                                 "group": ""}
                     else:
-                        name = {"name": occupant.get_name(), "username": occupant.get_username(),
-                                "gender": occupant.get_gender(), "nationality": occupant.get_nationality(),
-                                "group": occupant.get_group(), "wild": occupant.get_wild()}
+                        name = {"name": occupant.get_name(),
+                                "username": occupant.get_username(),
+                                "gender": occupant.get_gender(),
+                                "nationality": occupant.get_nationality(),
+                                "group": occupant.get_group(),
+                                "wild": occupant.get_wild()}
 
                 row_output.append(name if occupant else "null")
 
@@ -177,7 +183,8 @@ def main(module, lecture_hall, filters, reqs, blanks):
 
     for student in students:
 
-        person = Student(student["name"], student["shortcode"], student["gender"], student["nationality"],
+        person = Student(student["name"], student["shortcode"],
+                         student["gender"], student["nationality"],
                          student["group"])
         if 'disability' in student:
             person.set_disability(student["disability"])
@@ -222,7 +229,8 @@ def main(module, lecture_hall, filters, reqs, blanks):
 
 
 if __name__ == '__main__':
-    print(main('c1234-2', 'LTUG', 'wild,nationality,', 'Gisela Peters-3,', '1,'))
+    print(
+        main('c1234-2', 'LTUG', 'wild,nationality,', 'Gisela Peters-3,', '1,'))
     # print(get_blanks("1,"))
     # print(main('c1234-2', 'LTUG', 'seat', 'Brianna Morrison-1,Gisela Peters-3,'))
     # client = MongoClient(
