@@ -51,3 +51,7 @@ class Student:
 
     def __lt__(self, student):
         return self.username < student.username
+
+
+def dummy_student():
+    return Student("fh5", "fh5", "fh5", "fh5", "fh5", real=False)

@@ -117,8 +117,10 @@ def allocate_seats(layout, people, factors, total_seats):
     people = sort_people(people, factors)
     n = len(people)
     rem = max(0, (total_seats - n))
+
     for _ in range(rem):
-        people.append(Student("fh5", "fh5", "fh5", "fh5", "fh5", real=False))
+        people.append(dummy_student())
+
     people = evenly_spaced(group_by(people, 'real'))
     remaining = people
 
@@ -132,50 +134,11 @@ def allocate_seats(layout, people, factors, total_seats):
     return remaining
 
 
-def evaluate_ordering(people, radius=1):
-    n = len(people)
-    global_avg_predicted_grade = sum(map(lambda p: p.get_predicted_grade(), people)) / n
-
-    global_gender_ratio = len(list(filter(lambda p: p.is_male(), people))) / n
-    # print('global_gender_ratio', global_gender_ratio)
-    nationalities = collections.Counter(map(lambda p: p.get_predicted_grade(), people))
-    global_nationality_ratios = {k: v / n for k, v in nationalities.items()}
-
-    groups = collections.Counter(map(lambda p: p.get_group_name(), people))
-    avg_group_size = sum(groups.values()) / len(groups)
-
-    total_score = 0
-
-    for i in range(radius, len(people) - radius):
-        section = people[i - radius: i + radius + 1]
-        total_score += evaluate_section(section, global_avg_predicted_grade,
-                                        global_nationality_ratios, global_gender_ratio,
-                                        avg_group_size)
-
-    return 100 + total_score
-
-
-def evaluate_section(section, global_avg_predicted_grade,
-                     global_nationality_ratios, global_gender_ratio,
-                     avg_group_size):
-    n = len(section)
+def fitness(people):
     score = 0
-    avg_predicted_grade = sum(map(lambda p: p.get_predicted_grade(), section)) / n
-    score -= (avg_predicted_grade - global_avg_predicted_grade) ** 2
-
-    gender_ratio = len(list(filter(lambda p: p.is_male(), section))) / n
-    # print(gender_ratio)
-    score -= (global_gender_ratio - gender_ratio) ** 2
-    #
-    nationalities = collections.Counter(map(lambda p: p.get_predicted_grade(), section))
-    nationality_ratios = {k: v / n for k, v in nationalities.items()}
-    score -= sum(map(lambda nat: (nationality_ratios[nat] - global_nationality_ratios[nat]) ** 2,
-                     nationalities.keys()))
-    #
-    # groups = collections.Counter(map(lambda p: p.get_group_name(), section))
-    # score += max(groups.values()) / n
-
-    return score
+    for i in range(1, len(people) - 1):
+        pass
+    return 0
 
 
 def load_sample_data():
@@ -198,7 +161,8 @@ def load_sample_data():
 
 
 if __name__ == "__main__":
-    from student import Student
+    from student import Student, dummy_student
+
     students = load_sample_data()
     # print(students)
     students1 = [Student('A1', 'A2', 'A', 'Female'),
