@@ -1,6 +1,6 @@
 import random
 import itertools
-from .student import dummy_student
+from seating.student import Student, dummy_student
 
 
 def group_by(xs, attr):
@@ -208,8 +208,6 @@ def load_sample_data():
 
 
 if __name__ == "__main__":
-    from student import Student, dummy_student
-
     students = load_sample_data()
     orderings = []
     for factor in 'random', 'gender', 'nationality':
@@ -217,5 +215,5 @@ if __name__ == "__main__":
         orderings.append(people.copy())
         print(f'{factor} = {fitness(people.copy())}')
 
-    epoch, mu, lambda_ = 5, 3, 5
+    epoch, mu, lambda_ = 20, 3, 5
     optimal = evolution_strategy(orderings, epoch, mu, lambda_)
