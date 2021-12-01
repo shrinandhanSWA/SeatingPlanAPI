@@ -1,5 +1,6 @@
 class Student:
-    def __init__(self, name, username, gender, nationality, group, disability=False, wildcard=False, real=True):
+    def __init__(self, name, username, gender, nationality, group,
+                 disability=False, wildcard=False, real=True):
         self.name = name
         self.username = username
         self.gender = gender
