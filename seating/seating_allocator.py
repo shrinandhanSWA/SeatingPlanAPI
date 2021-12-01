@@ -1,9 +1,7 @@
 import random
-
 import itertools
-import collections
+from .student import dummy_student
 
-from seating.student import Student
 
 def group_by(xs, attr):
     xs = sorted(xs, key=lambda x: getattr(x, attr))
@@ -35,10 +33,6 @@ def sort_people(people, factors):
         people.sort(key=lambda student: student.get_group())
         return people
 
-    if 'wild' in factors:
-        optimal = evenly_spaced(group_by(people, 'wild'))
-        once = True
-
     if 'nationality' in factors:
         if once:
             # special function to distribute again
@@ -53,7 +47,8 @@ def sort_people(people, factors):
                 this_shard = optimal[i * 20: (i + 1) * 20]
 
                 # sort this shard
-                optimal_shard = evenly_spaced(group_by(this_shard, 'nationality'))
+                optimal_shard = evenly_spaced(
+                    group_by(this_shard, 'nationality'))
 
                 # add shard in order back to out
                 out.extend(optimal_shard)
@@ -103,7 +98,9 @@ def sort_people(people, factors):
             return out
         else:
             optimal = evenly_spaced(group_by(people, 'gender'))
-            once = True
+
+    if 'wild' in factors:
+        optimal = evenly_spaced(group_by(people, 'wild'))
 
     return optimal
 
@@ -137,8 +134,60 @@ def allocate_seats(layout, people, factors, total_seats):
 def fitness(people):
     score = 0
     for i in range(1, len(people) - 1):
-        pass
-    return 0
+        left, curr, right = people[i - 1], people[i], people[i + 1]
+
+        g1, g2, g3 = left.get_gender(), curr.get_gender(), right.get_gender()
+        if g1 == g2:
+            score += 1
+
+        if g2 == g3:
+            score += 1
+
+        if g1 == g2 == g3:
+            score -= 2
+
+        n1 = left.get_nationality()
+        n2 = curr.get_nationality()
+        n3 = right.get_nationality()
+
+        if n1 == n2:
+            score += 1
+
+        if n2 == n3:
+            score += 1
+
+        if n1 == n2 == n3:
+            score -= 2
+
+    return score
+
+
+def mutate(people):
+    ratio = random.random()
+    swaps = int(ratio * len(people))
+    n = len(people)
+    for _ in range(swaps):
+        i = random.randint(0, n - 1)
+        j = random.randint(0, n - 1)
+        people[i], people[j] = people[j], people[i]
+
+    return people
+
+
+def evolution_strategy(orderings, epoch, mu, lambda_):
+    for i in range(epoch):
+        orderings.sort(key=lambda people: fitness(people))
+        parents = orderings[-mu:]
+        children = []
+        for _ in range(lambda_):
+            index = random.randint(0, len(parents) - 1)
+            children.append(mutate(parents[index].copy()))
+
+        orderings = parents + children
+        print(f'''epoch {i}: fitness={max(map(lambda people: fitness(people),
+                                              orderings))}''')
+
+    return max(orderings, key=lambda people: fitness(people))
 
 
 def load_sample_data():
@@ -147,15 +196,13 @@ def load_sample_data():
     with open('sample_data.csv') as sample_data:
         rows = csv.reader(sample_data)
         next(rows)
-        for [username, name, group, disability, gender, nationality, wc_acc, wc_py] \
+        for [username, name, group, disability, gender, nationality, wc_acc,
+             wc_py] \
                 in rows:
-
-            first_name = name.split(' ')[0]
-            last_name = name.split(' ')[0]
-            students.append(Student(first_name, last_name, username, gender=gender,
-                                    nationality=nationality, disability_exception=disability != '',
-                                    wildcard_accountant=wc_acc, wildcard_python=wc_py,
-                                    group_name=group))
+            students.append(
+                Student(name, username, gender, nationality, group,
+                        disability=disability != '',
+                        wildcard=wc_acc == 'Y' or wc_py == 'Y'))
 
     return students
 
@@ -164,20 +211,11 @@ if __name__ == "__main__":
     from student import Student, dummy_student
 
     students = load_sample_data()
-    # print(students)
-    students1 = [Student('A1', 'A2', 'A', 'Female'),
-                Student('B1', 'A2', 'B', 'Male'),
-                Student('C1', 'A2', 'C', 'Female'),
-                Student('D1', 'A2', 'D', 'Male')]
-    #
-    for radius in range(1, 10):
-        print(f'radius={radius}')
-        for factor in 'random', 'gender', 'predicted_grade', 'nationality':
-            # print(factor)
-            people = sort_people(students, factors=[factor])
-            # if factor != 'random':
-            #     print(list(map(lambda p: getattr(p, factor), people)))
-            # print('sorted', people)
-            print(f'{factor} = {evaluate_ordering(people.copy())}')
+    orderings = []
+    for factor in 'random', 'gender', 'nationality':
+        people = sort_people(students, factors=[factor])
+        orderings.append(people.copy())
+        print(f'{factor} = {fitness(people.copy())}')
 
-        print('=' * 10)
+    epoch, mu, lambda_ = 5, 3, 5
+    optimal = evolution_strategy(orderings, epoch, mu, lambda_)
