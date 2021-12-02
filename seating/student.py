@@ -8,14 +8,17 @@ class Student:
         self.gender = gender
         self.group = group
         self.disability = disability
-        self.wild = wildcard
+        self.wildcard = wildcard
         self.real = real
 
     def to_json(self):
         return self.__dict__
 
     def get_wild(self):
-        return self.wild
+        return self.wildcard
+
+    def is_wildcard(self):
+        return self.wildcard
 
     def get_username(self):
         return self.username
@@ -40,9 +43,6 @@ class Student:
 
     def set_wild(self, wild):
         self.wild = wild
-
-    def is_wildcard(self):
-        return self.wild == 'Y'
 
     def is_male(self):
         return self.gender == 'Male'
