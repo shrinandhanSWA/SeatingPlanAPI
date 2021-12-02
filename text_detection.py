@@ -158,8 +158,8 @@ def create_subsections(generated_matrix):
                 x_start = i
             x_end = i
 
-    print(generated_matrix[x_start:(x_end+1),:].transpose())
-    print()
+    #print(generated_matrix[x_start:(x_end+1),:].transpose())
+    #print()
 
     for j in range(0, generated_matrix.shape[1]):
         if np.any(generated_matrix.transpose()[j]):
@@ -167,8 +167,8 @@ def create_subsections(generated_matrix):
                 y_start = j
             y_end = j
 
-    print(generated_matrix[x_start:(x_end + 1), y_start:(y_end + 1)].transpose())
-    print()
+    #print(generated_matrix[x_start:(x_end + 1), y_start:(y_end + 1)].transpose())
+    #print()
     return [generated_matrix[x_start:(x_end+1), y_start:(y_end + 1)].transpose()]
 
 
