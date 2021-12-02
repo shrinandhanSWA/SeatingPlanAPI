@@ -25,82 +25,38 @@ def evenly_spaced(iterables):
 
 
 def sort_people(people, factors):
-    once = False
-    optimal = people
-    random.shuffle(people)
+    optimal = people.copy()
+
+    if 'random' in factors:
+        optimal = people.copy()
+        random.shuffle(optimal)
+        factors.remove('random')
+
+    if not factors:
+        return optimal
 
     if 'group' in factors:
-        people.sort(key=lambda student: student.get_group())
-        return people
+        optimal.sort(key=lambda student: student.get_group())
+        return optimal
 
+    orderings = []
     if 'nationality' in factors:
-        if once:
-            # special function to distribute again
-            out = []
-
-            # get size of people, and split into 20
-            size = len(people)
-            divs = size // 20
-
-            for i in range(divs):
-                # partition this shard
-                this_shard = optimal[i * 20: (i + 1) * 20]
-
-                # sort this shard
-                optimal_shard = evenly_spaced(
-                    group_by(this_shard, 'nationality'))
-
-                # add shard in order back to out
-                out.extend(optimal_shard)
-
-            # deal with remaining people(rem)
-            this_shard = people[divs * 20:]
-
-            # sort this shard
-            optimal_shard = evenly_spaced(group_by(this_shard, 'nationality'))
-
-            # add shard in order back to out
-            out.extend(optimal_shard)
-
-            return out
-        else:
-            optimal = evenly_spaced(group_by(people, 'nationality'))
-            once = True
+        orderings.append(evenly_spaced(group_by(people, 'nationality')))
 
     if 'gender' in factors:
-        if once:
-            # special function to distribute again
-            out = []
+        orderings.append(evenly_spaced(group_by(people, 'gender')))
 
-            # get size of people, and split into 20
-            size = len(people)
-            divs = size // 20
-
-            for i in range(divs):
-                # partition this shard
-                this_shard = optimal[i * 20: (i + 1) * 20]
-
-                # sort this shard
-                optimal_shard = evenly_spaced(group_by(this_shard, 'gender'))
-
-                # add shard in order back to out
-                out.extend(optimal_shard)
-
-            # deal with remaining people(rem)
-            this_shard = people[divs * 20:]
-
-            # sort this shard
-            optimal_shard = evenly_spaced(group_by(this_shard, 'gender'))
-
-            # add shard in order back to out
-            out.extend(optimal_shard)
-
-            return out
-        else:
-            optimal = evenly_spaced(group_by(people, 'gender'))
+    epochs = 10
+    mu = 5
+    lambda_ = 5
+    optimal = evolution_strategy(orderings, epochs, mu, lambda_)
 
     if 'wild' in factors:
-        optimal = evenly_spaced(group_by(people, 'wild'))
+        wildcards = list(filter(lambda person: person.is_wildcard(), optimal))
+        for wc in wildcards:
+            optimal.remove(wc)
+
+        optimal = evenly_spaced([optimal, wildcards])
 
     return optimal
 
@@ -209,11 +165,12 @@ def load_sample_data():
 
 if __name__ == "__main__":
     students = load_sample_data()
-    orderings = []
-    for factor in 'random', 'gender', 'nationality':
-        people = sort_people(students, factors=[factor])
-        orderings.append(people.copy())
-        print(f'{factor} = {fitness(people.copy())}')
 
-    epoch, mu, lambda_ = 20, 3, 5
-    optimal = evolution_strategy(orderings, epoch, mu, lambda_)
+    for factors in ['group'], ['gender'], ['nationality'], ['gender',
+                                                            'nationality'], \
+                   ['gender',
+                    'nationality',
+                    'wild']:
+        optimal = sort_people(students, factors=factors)
+        print(f'{factors} = {fitness(optimal)}')
+        print('=' * 10)
