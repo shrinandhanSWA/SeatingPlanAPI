@@ -1,29 +1,54 @@
 from seating.seat import Seat
-
+from seating.student import Student
 
 class Subsection:
-    def __init__(self, rows, generated=False):
+    def __init__(self, rows, reqs, people, blanks):
         self.rows = []
         self.seats = {}
+        self.valid = True
 
         build = []
 
         for row in rows:
+            if not self.valid:
+                break
             this_row = []
-            for seat_no in row:
-                seat = Seat(seat_no if generated else count)
+            for count in row:
+                this_available = True
+                seat = Seat(count)
+                if str(count) in blanks:
+                    # it is unavailable
+                    # set it to the dummy person we have
+                    seat.set_occupant(Student("fh5", "fh5", "fh5", "fh5", "fh5", real=False))
+                    seat.set_unavailable()
+                    this_available = False
+                if str(count) in reqs:
+                    if not this_available:
+                        # trying to set student into a seat that was blanked out
+                        self.valid = False
+                        break
+                    # find person and set occupant
+                    for person in people:
+                        if person.get_name() == reqs[str(count)]:
+                            seat.set_occupant(person)
+                            seat.set_unavailable()
+                            break
+
                 this_row.append(seat)
 
             build.append(this_row)
 
         self.rows = build
-        self.total_seats = count
+
 
     def to_json(self):
         return self.seats
 
     def get_rows(self):
         return self.rows
+
+    def is_valid(self):
+        return self.valid
 
     def allocate_seats(self, people):
         """
@@ -37,13 +62,13 @@ class Subsection:
                 if seat.is_available() and seat.get_seat_no() != -1:
                     if not people:
                         return []
-                    seat.set_occupant(people.pop())
-                    seat.set_unavailable()
+                    person = people.pop()
+
+                    if person:
+                        seat.set_occupant(person)
+                        seat.set_unavailable()
 
         return people
-
-    def get_total_seats(self):
-        return self.total_seats
 
     def block_alternate_seats(self):
         """

@@ -3,21 +3,27 @@ from seating.subsection import Subsection
 
 class Layout:
 
-    def __init__(self, subsections):
+    def __init__(self, subsections, reqs, people, blanks):
 
         output = []
-        total_seats = 0
+        self.valid = True
+
         for rows in subsections:
-            subsection = Subsection(rows)
-            total_seats += subsection.get_total_seats()
-            output.append(subsection)
+            output.append(Subsection(rows, reqs, people, blanks))
+
+        for subsection in output:
+            if not subsection.is_valid():
+                self.valid = False
+                break
 
         self.subsections = output
-        self.total_seats = total_seats
 
     def block_alternate_seats(self):
         for subsection in self.subsections:
             subsection.block_alternate_seats()
+
+    def is_valid(self):
+        return self.valid
 
     def get_subsections(self):
         return self.subsections
@@ -32,6 +38,3 @@ class Layout:
             seats.update(subsection.get_seat_mapping())
 
         return seats
-
-    def get_total_seats(self):
-        return self.total_seats
