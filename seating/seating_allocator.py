@@ -140,8 +140,8 @@ def evolution_strategy(orderings, epoch, mu, lambda_):
             children.append(mutate(parents[index].copy()))
 
         orderings = parents + children
-        print(f'''epoch {i}: fitness={max(map(lambda people: fitness(people),
-                                              orderings))}''')
+        # print(f'''epoch {i}: fitness={max(map(lambda people: fitness(people),
+        #                                       orderings))}''')
 
     return max(orderings, key=lambda people: fitness(people))
 
