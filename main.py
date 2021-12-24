@@ -186,8 +186,10 @@ def main(module, lecture_hall, filters, reqs, blanks):
         person = Student(student["name"], student["shortcode"],
                          student["gender"], student["nationality"],
                          student["group"])
+
         if 'disability' in student:
             person.set_disability(student["disability"])
+
         if 'wild' in student:
             person.set_wild(student["wild"])
 
