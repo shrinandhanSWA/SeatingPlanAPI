@@ -1,6 +1,6 @@
 class Student:
     def __init__(self, name, username, gender, nationality, group,
-                 disability=False, wildcard=False, real=True):
+                 disability=False, wild=False, real=True):
         self.name = name
         self.username = username
         self.gender = gender
@@ -8,17 +8,17 @@ class Student:
         self.gender = gender
         self.group = group
         self.disability = disability
-        self.wildcard = wildcard
+        self.wild = wild
         self.real = real
 
     def to_json(self):
         return self.__dict__
 
     def get_wild(self):
-        return self.wildcard
+        return self.wild
 
     def is_wildcard(self):
-        return self.wildcard
+        return self.wild
 
     def get_username(self):
         return self.username
@@ -52,6 +52,12 @@ class Student:
 
     def __lt__(self, student):
         return self.username < student.username
+
+    def __repr__(self):
+        return self.username + "*" if self.wild else ""
+
+    def __str__(self):
+        return self.__repr__()
 
 
 def dummy_student():
