@@ -62,7 +62,7 @@ def sort_people(people, factors):
     mu = 2
     lambda_ = 10
 
-    return evolution_strategy(orderings, epochs, mu, lambda_)
+    return evolution_strategy(orderings, epochs, mu, lambda_, factors)
 
 
 def allocate_seats(layout, people, factors, total_seats):
@@ -91,41 +91,42 @@ def allocate_seats(layout, people, factors, total_seats):
     return remaining
 
 
-def fitness(people):
+def fitness(people, factors):
     """
     Calculate the fitness of ordering of list
     :param people: list of Student objects
     :return: int
     """
+
+    def window_score(v1, v2, v3):
+        score = 0
+        if v1 == v2:
+            score += 1
+
+        if v2 == v3:
+            score += 1
+
+        # if all have the same gender
+        if v1 == v2 == v3:
+            score -= 2
+
+        return score
+
     score = 0
     for i in range(1, len(people) - 1):
         # Scan over every window of 3 students
         left, curr, right = people[i - 1], people[i], people[i + 1]
+        if 'gender' in factors:
+            g1 = left.get_gender()
+            g2 = curr.get_gender()
+            g3 = right.get_gender()
+            score += window_score(g1, g2, g3)
 
-        g1, g2, g3 = left.get_gender(), curr.get_gender(), right.get_gender()
-        # If student of left is same gender
-        if g1 == g2:
-            score += 1
-
-        if g2 == g3:
-            score += 1
-
-        # if all have the same gender
-        if g1 == g2 == g3:
-            score -= 2
-
-        n1 = left.get_nationality()
-        n2 = curr.get_nationality()
-        n3 = right.get_nationality()
-
-        if n1 == n2:
-            score += 1
-
-        if n2 == n3:
-            score += 1
-
-        if n1 == n2 == n3:
-            score -= 2
+        if 'nationality' in factors:
+            n1 = left.get_nationality()
+            n2 = curr.get_nationality()
+            n3 = right.get_nationality()
+            score += window_score(n1, n2, n3)
 
     return score
 
@@ -156,7 +157,7 @@ def mutate(people):
     return people
 
 
-def evolution_strategy(orderings, epoch, mu, lambda_):
+def evolution_strategy(orderings, epoch, mu, lambda_, factors):
     """
 
     :param orderings: list of students
@@ -171,9 +172,9 @@ def evolution_strategy(orderings, epoch, mu, lambda_):
 
     for i in range(epoch):
         # Sort based on fitness
-        orderings.sort(key=lambda people: fitness(people))
+        orderings.sort(key=lambda people: fitness(people, factors))
 
-        curr_max_fitness = fitness(orderings[-1])
+        curr_max_fitness = fitness(orderings[-1], factors)
         if curr_max_fitness == prev_max_fitness:
             max_fitness_count += 1
             # If the fitness has stopped increasing then stop iterations
@@ -199,7 +200,7 @@ def evolution_strategy(orderings, epoch, mu, lambda_):
         # print(f'''epoch {i}: fitness={max(map(lambda people: fitness(people),
         #                                       orderings))}''')
 
-    return max(orderings, key=lambda people: fitness(people))
+    return max(orderings, key=lambda people: fitness(people, factors))
 
 
 def load_sample_data(file):
@@ -233,5 +234,5 @@ if __name__ == "__main__":
                     'nationality',
                     'wild']:
         optimal = sort_people(students, factors=factors)
-        print(f'{factors} = {fitness(optimal)}')
+        print(f'{factors} = {fitness(optimal, factors)}')
         print('=' * 10)
