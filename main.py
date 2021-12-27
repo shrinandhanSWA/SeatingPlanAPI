@@ -192,6 +192,9 @@ def main(module, lecture_hall, filters, reqs, blanks):
 
         if 'wild' in student:
             person.set_wild(student["wild"])
+        else:
+            isWild = student["wildCard1"] != '' or student["wildCard2"] != ''
+            person.set_wild(str(isWild))
 
         people.append(person)
 
@@ -232,7 +235,7 @@ def main(module, lecture_hall, filters, reqs, blanks):
 
 if __name__ == '__main__':
     print(
-        main('c1234-2', 'LTUG', 'wild,nationality,', 'Gisela Peters-3,', '1,'))
+        main('i-hate', 'grnj', 'wild,', 'Gisela Peters-3,', '1,'))
     # print(get_blanks("1,"))
     # print(main('c1234-2', 'LTUG', 'seat', 'Brianna Morrison-1,Gisela Peters-3,'))
     # client = MongoClient(
