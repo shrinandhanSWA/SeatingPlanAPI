@@ -233,11 +233,3 @@ def main(module, lecture_hall, filters, reqs, blanks):
 if __name__ == '__main__':
     print(
         main('c1234-2', 'LTUG', 'wild,nationality,', 'Gisela Peters-3,', '1,'))
-    # print(get_blanks("1,"))
-    # print(main('c1234-2', 'LTUG', 'seat', 'Brianna Morrison-1,Gisela Peters-3,'))
-    # client = MongoClient(
-    #     "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
-    # db = client.myFirstDatabase
-    # generate_seat_numbers('c1234-2', 'LT3', db)
-    # print(get_reqs('aayush-1,nandhu-2'))
-    print()

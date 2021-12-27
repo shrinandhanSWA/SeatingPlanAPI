@@ -20,13 +20,15 @@ def index():
             result = {"status": "failure", "reason": "Lecture hall not found"}
             return jsonify(result)
         if seating == -2:
-            result = {"status": "failure", "reason": "Trying to set student to a blanked out seat"}
+            result = {"status": "failure", "reason": "Trying to set student "
+                                                     "to a blanked out seat"}
             return jsonify(result)
         if seating is not None:
             result = {"status": "success", "layout": seating}
             return jsonify(result)
         else:
-            result = {"status": "failure", "reason": "Not enough seats for the students"}
+            result = {"status": "failure",
+                      "reason": "Not enough seats for the students"}
             return jsonify(result)
     else:
         return jsonify({'Error': "This is a GET API method"})
