@@ -32,10 +32,9 @@ def evenly_spaced(iterables):
 
 def sort_people(people, factors):
     optimal = people.copy()
+    random.shuffle(optimal)
 
     if 'random' in factors:
-        optimal = people.copy()
-        random.shuffle(optimal)
         factors.remove('random')
 
     if not factors:
@@ -52,15 +51,15 @@ def sort_people(people, factors):
     if 'gender' in factors:
         orderings.append(evenly_spaced(group_by(people, 'gender')))
 
+    # wildcards with special expertise need to be evenly placed around the
+    # lecture theatre
     if 'wild' in factors:
-        # print(orderings)
         orderings = list(map(lambda optimal: evenly_spaced(group_by(
             optimal, 'wild')), orderings))
-        # print(orderings)
 
-    epochs = 20
+    epochs = 100
     mu = 2
-    lambda_ = 10
+    lambda_ = 5 * mu
 
     return evolution_strategy(orderings, epochs, mu, lambda_, factors)
 
@@ -131,15 +130,14 @@ def fitness(people, factors):
     return score
 
 
-def mutate(people):
+def mutate(people, swap_rate):
     """
     Mutate list by swapping students at randomly chosen indices
+    :param swap_rate: percentage of seats to swap
     :param people: list of students
     :return: list of students
     """
-    # Swap 10% of indices
-    ratio = 0.1
-    swaps = int(ratio * len(people))
+    swaps = int(swap_rate * len(people))
     n = len(people)
 
     for _ in range(swaps):
@@ -166,25 +164,13 @@ def evolution_strategy(orderings, epoch, mu, lambda_, factors):
     :param lambda_: number of children to generate from mu parents
     :return:
     """
-    max_fitness_count = 0
-    count_threshold = 3
-    prev_max_fitness = 0
+    swap_rate = 0.5
+    min_swap_rate = 0.1
+    decay_rate = 0.95
 
     for i in range(epoch):
         # Sort based on fitness
         orderings.sort(key=lambda people: fitness(people, factors))
-
-        curr_max_fitness = fitness(orderings[-1], factors)
-        if curr_max_fitness == prev_max_fitness:
-            max_fitness_count += 1
-            # If the fitness has stopped increasing then stop iterations
-            if max_fitness_count == count_threshold:
-                break
-
-        elif curr_max_fitness > prev_max_fitness:
-            # If new max fitness is greater than previous max then reset count
-            prev_max_fitness = curr_max_fitness
-            max_fitness_count = 1
 
         # Select mu fittest parents
         parents = orderings[-mu:]
@@ -193,12 +179,13 @@ def evolution_strategy(orderings, epoch, mu, lambda_, factors):
         for _ in range(lambda_):
             index = random.randint(0, len(parents) - 1)
             # Mutate random parent to create new child
-            children.append(mutate(parents[index].copy()))
+            children.append(mutate(parents[index].copy(), swap_rate))
 
         # New population is combination of parents and children
         orderings = parents + children
-        # print(f'''epoch {i}: fitness={max(map(lambda people: fitness(people),
-        #                                       orderings))}''')
+        swap_rate = max(decay_rate * swap_rate, min_swap_rate)
+        # print(f'''epoch {i} (swap_rate = {swap_rate}: fitness={max(
+        #     map(lambda people: fitness(people, factors), orderings))}''')
 
     return max(orderings, key=lambda people: fitness(people, factors))
 
@@ -228,11 +215,7 @@ def load_sample_data(file):
 if __name__ == "__main__":
     students = load_sample_data('sample_data.csv')
 
-    for factors in ['group'], ['gender'], ['nationality'], ['gender',
-                                                            'nationality'], \
-                   ['gender',
-                    'nationality',
-                    'wild']:
-        optimal = sort_people(students, factors=factors)
-        print(f'{factors} = {fitness(optimal, factors)}')
-        print('=' * 10)
+    factors = ['gender', 'nationality', 'wild']
+    optimal = sort_people(students, factors=factors)
+    print(f'{factors} = {fitness(optimal, factors)}')
+    print('=' * 10)
