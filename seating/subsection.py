@@ -4,9 +4,9 @@ from seating.student import dummy_student
 
 class Subsection:
     def __init__(self, rows, reqs, people, blanks):
-        self.rows = self.initialise_rows(blanks, people, reqs, rows)
-        self.seats = {}
         self.valid = True
+        self.seats = {}
+        self.rows = self.initialise_rows(blanks, people, reqs, rows)
 
     def initialise_rows(self, blanks, people, reqs, rows):
         build = []
