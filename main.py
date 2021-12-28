@@ -152,7 +152,8 @@ def get_blanks(blanks):
 
 def main(module, lecture_hall, filters, reqs, blanks):
     client = MongoClient(
-        "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
+        "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net/ "
+        "myFirstDatabase?retryWrites=true&w=majority")
     db = client.myFirstDatabase
 
     if filters == 'seat':
