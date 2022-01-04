@@ -3,13 +3,16 @@ from seating.layout import Layout
 from seating.seating_allocator import allocate_seats
 from seating.student import Student
 
-client = MongoClient(
-    "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net/"
-    "myFirstDatabase?retryWrites=true&w=majority")
-db = client.myFirstDatabase
-
 
 def get_lecture_hall(lecture_hall, db, module, just=False):
+    """
+
+    :param lecture_hall:
+    :param db:
+    :param module:
+    :param just:
+    :return:
+    """
     lecture_halls = get_module(module, db)["lectureHalls"]
 
     hall = None
@@ -49,6 +52,12 @@ def get_lecture_hall(lecture_hall, db, module, just=False):
 
 
 def get_module(module, db):
+    """
+
+    :param module:
+    :param db:
+    :return:
+    """
     module_db = db["categories"]
 
     students = module_db.find({"slug": module})
@@ -77,7 +86,7 @@ def generate_layout(layout, lecture_hall):
                     if seat.is_available():
                         name = {"name": occupant, "username": "", "gender": "",
                                 "nationality": "", "group": ""}
-                    elif occupant is not None and occupant.get_name() == 'fh5':
+                    elif occupant is not None and not occupant.get_real():
                         name = {"name": seat.get_seat_no(), "username": "",
                                 "gender": "", "nationality": "",
                                 "group": ""}
@@ -103,6 +112,13 @@ def get_filters(filters):
 
 
 def generate_seat_numbers(module, lecture_hall, db):
+    """
+
+    :param module:
+    :param lecture_hall:
+    :param db:
+    :return:
+    """
     hall = get_lecture_hall(lecture_hall, db, module, True)
 
     seats = hall["seatLayout"]
@@ -129,30 +145,50 @@ def generate_seat_numbers(module, lecture_hall, db):
 
 
 def get_reqs(reqs):
+    """
+
+    :param reqs:
+    :return:
+    """
     req_list = reqs.split(',')
     out = {}
 
     for req in req_list:
         if req == '':
             continue
-        item = req.split('-')
-        out[item[1]] = item[0]
+        name, seat = req.split('-')
+        out[seat] = name
 
     return out
 
 
 def get_blanks(blanks):
-    blank_list = blanks.split(',')
-    out = set(blank_list)
+    """
 
+    :param blanks:
+    :return:
+    """
+    blank_list = blanks.split(',')
+
+    out = set(blank_list)
     out.remove('')
 
     return out
 
 
 def main(module, lecture_hall, filters, reqs, blanks):
+    """
+
+    :param module:
+    :param lecture_hall:
+    :param filters:
+    :param reqs:
+    :param blanks:
+    :return:
+    """
     client = MongoClient(
-        "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
+        "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net/"
+        "myFirstDatabase?retryWrites=true&w=majority")
     db = client.myFirstDatabase
 
     if filters == 'seat':
@@ -179,6 +215,42 @@ def main(module, lecture_hall, filters, reqs, blanks):
     students = get_module(module, db)["students"]
 
     # turn students into list of people
+    people = get_students(students)
+
+    # generate layout from lecture hall
+    # takes in list of unavailable seats to blank out beforehand
+    # takes in the reqs and student list to put people in place beforehand
+    layout = Layout(lecture_hall, reqs, people, blanks)
+
+    if not layout.is_valid():
+        return -2  # user entered a bad combo
+
+    names = set(reqs.values())
+    people = list(filter(lambda person: person.get_name() not in names,
+                         people))
+    # remove people who have been dealt with in reqs
+
+    # block alternate seats
+    # layout.block_alternate_seats()
+
+    # get number of seats in the lecture hall
+    no_seats -= len(reqs)
+    no_seats -= len(blanks)
+
+    # allocate seats
+    remaining = allocate_seats(layout, people, filters, no_seats)
+
+    if remaining:
+        # failed to allocate students
+        return None
+
+    # turn layout into list of lists based on input
+    output = generate_layout(layout, lecture_hall)
+
+    return output
+
+
+def get_students(students):
     people = []
 
     for student in students:
@@ -197,45 +269,11 @@ def main(module, lecture_hall, filters, reqs, blanks):
             person.set_wild(str(isWild))
 
         people.append(person)
-
-    # generate layout from lecture hall
-    # takes in list of unavailable seats to blank out beforehand
-    # takes in the reqs and student list to put people in place beforehand
-    layout = Layout(lecture_hall, reqs, people, blanks)
-
-    if not layout.is_valid():
-        return -2  # user entered a bad combo
-
-    # remove people who have been dealt with in reqs
-    for _, value in reqs.items():
-        # remove person(value) from list
-        for person in people:
-            if person.get_name() == value:
-                people.remove(person)
-
-    # block alternate seats
-    # layout.block_alternate_seats()
-
-    # get number of seats in the lecture hall
-    no_seats -= len(reqs)
-    no_seats -= len(blanks)
-
-    # allocate seats
-    people = allocate_seats(layout, people, filters, no_seats)
-
-    if len(people) != 0:
-        # failed to allocate students
-        return None
-
-    # turn layout into list of lists based on input
-    output = generate_layout(layout, lecture_hall)
-
-    return output
+    return people
 
 
 if __name__ == '__main__':
-    print(
-        main('i-hate', 'grnj', 'wild,', 'Gisela Peters-3,', '1,'))
+    print( main('c1234-2', 'LTUG', 'wild,nationality,', 'Gisela Peters-3,', '1,'))
     # print(get_blanks("1,"))
     # print(main('c1234-2', 'LTUG', 'seat', 'Brianna Morrison-1,Gisela Peters-3,'))
     # client = MongoClient(
