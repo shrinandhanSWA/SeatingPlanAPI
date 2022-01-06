@@ -139,13 +139,11 @@ def mutate(people, swap_rate):
     """
     swaps = int(swap_rate * len(people))
     n = len(people)
-
+    i = j = 0
     for _ in range(swaps):
         first = True
         # Only swap if neither are wildcards or both are wildcards
-        while (first or
-               (people[i].is_wildcard() and not people[j].is_wildcard()
-                or not people[i].is_wildcard() and people[j].is_wildcard())):
+        while first or people[i].is_wildcard() == people[j].is_wildcard():
             i = random.randint(0, n - 1)
             j = random.randint(0, n - 1)
             first = False
