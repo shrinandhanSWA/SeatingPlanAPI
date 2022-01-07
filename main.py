@@ -1,7 +1,12 @@
 from pymongo import MongoClient
+
+from seating.evolution_strategy import EvolutionStrategy
 from seating.layout import Layout
 from seating.seating_allocator import allocate_seats
+from seating.seating_mutator import SeatingMutator
 from seating.student import Student
+from seating.factors import WILD
+from seating.fitness_scorer import FitnessScorer
 
 
 def get_lecture_hall(lecture_hall, db, module, just=False):
@@ -220,12 +225,12 @@ def main(module, lecture_hall, filters, reqs, blanks):
     # get list of students taking this module
     students = get_module(module, db)["students"]
 
-    # turn students into list of people
+    # turn students into list of students
     people = get_students(students)
 
     # generate layout from lecture hall
     # takes in list of unavailable seats to blank out beforehand
-    # takes in the reqs and student list to put people in place beforehand
+    # takes in the reserved and student list to put students in place beforehand
     layout = Layout(lecture_hall, reqs, people, blanks)
 
     if not layout.is_valid():
@@ -234,7 +239,7 @@ def main(module, lecture_hall, filters, reqs, blanks):
     names = set(reqs.values())
     people = list(filter(lambda person: person.get_name() not in names,
                          people))
-    # remove people who have been dealt with in reqs
+    # remove students who have been dealt with in reserved
 
     # block alternate seats
     # layout.block_alternate_seats()
@@ -244,7 +249,10 @@ def main(module, lecture_hall, filters, reqs, blanks):
     no_seats -= len(blanks)
 
     # allocate seats
-    remaining = allocate_seats(layout, people, filters, no_seats)
+    factors = filters
+    remaining = allocate_seats(layout, people, filters, no_seats,
+                               get_evolutionary_strategy(factors),
+                               names)
 
     if remaining:
         # failed to allocate students
@@ -267,11 +275,32 @@ def get_students(students):
         if 'disability' in student:
             person.set_disability(student["disability"])
 
-        if 'wild' in student:
-            person.set_wild(student["wild"])
+        if WILD in student:
+            person.set_wild(student[WILD])
 
         people.append(person)
     return people
+
+
+EPOCHS = 100
+MU = 2
+LAMBDA = 5 * MU
+
+INITIAL_SWAP_RATE = 0.5
+MIN_SWAP_RATE = 0.1
+DECAY_RATE = 0.95
+
+
+def get_evolutionary_strategy(factors):
+    fitness_scorer = FitnessScorer(factors)
+    seating_mutator = SeatingMutator(swap_rate=INITIAL_SWAP_RATE,
+                                     min_swap_rate=MIN_SWAP_RATE)
+
+    evolution_strategy = EvolutionStrategy(mu=MU, lambda_=LAMBDA,
+                                           factors=factors,
+                                           mutator=seating_mutator,
+                                           scorer=fitness_scorer)
+    return evolution_strategy
 
 
 if __name__ == '__main__':
