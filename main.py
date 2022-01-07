@@ -67,6 +67,12 @@ def get_module(module, db):
 
 
 def generate_layout(layout, lecture_hall):
+    """
+
+    :param layout:
+    :param lecture_hall:
+    :return:
+    """
     output = []
 
     for i, subsection in enumerate(lecture_hall):
@@ -180,10 +186,10 @@ def main(module, lecture_hall, filters, reqs, blanks):
     """
 
     :param module:
-    :param lecture_hall:
-    :param filters:
-    :param reqs:
-    :param blanks:
+    :param lecture_hall: list of list of seat numbers
+    :param filters: factors for sorting algorithm
+    :param reqs: students already assigned to seats in the frontend
+    :param blanks: seats to be left blank
     :return:
     """
     client = MongoClient(
