@@ -130,7 +130,13 @@ def fitness(people, factors):
     return score
 
 
-def mutate(people, swap_rate):
+def valid_swap(people, i, j, factors):
+    if 'wild' in factors:
+        return people[i].is_wildcard() == people[j].is_wildcard()
+    return True
+
+
+def mutate(people, swap_rate, factors):
     """
     Mutate list by swapping students at randomly chosen indices
     :param swap_rate: percentage of seats to swap
@@ -143,7 +149,7 @@ def mutate(people, swap_rate):
     for _ in range(swaps):
         first = True
         # Only swap if neither are wildcards or both are wildcards
-        while first or people[i].is_wildcard() == people[j].is_wildcard():
+        while first or not valid_swap(people, i, j, factors):
             i = random.randint(0, n - 1)
             j = random.randint(0, n - 1)
             first = False
@@ -166,10 +172,12 @@ def evolution_strategy(orderings, epoch, mu, lambda_, factors):
     min_swap_rate = 0.1
     decay_rate = 0.95
 
+    orderings = initialise_population(factors, lambda_, mu, orderings,
+                                      swap_rate)
+
     for i in range(epoch):
         # Sort based on fitness
         orderings.sort(key=lambda people: fitness(people, factors))
-
         # Select mu fittest parents
         parents = orderings[-mu:]
 
@@ -177,15 +185,23 @@ def evolution_strategy(orderings, epoch, mu, lambda_, factors):
         for _ in range(lambda_):
             index = random.randint(0, len(parents) - 1)
             # Mutate random parent to create new child
-            children.append(mutate(parents[index].copy(), swap_rate))
+            children.append(mutate(parents[index].copy(), swap_rate, factors))
 
         # New population is combination of parents and children
         orderings = parents + children
         swap_rate = max(decay_rate * swap_rate, min_swap_rate)
-        # print(f'''epoch {i} (swap_rate = {swap_rate}: fitness={max(
-        #     map(lambda people: fitness(people, factors), orderings))}''')
 
     return max(orderings, key=lambda people: fitness(people, factors))
+
+
+def initialise_population(factors, lambda_, mu, orderings, swap_rate):
+    children = []
+    for _ in range(len(orderings) - (mu + lambda_)):
+        index = random.randint(0, len(orderings) - 1)
+        # Mutate random parent to create new child
+        children.append(mutate(orderings[index].copy(), swap_rate, factors))
+    orderings += children
+    return orderings
 
 
 def load_sample_data(file):
