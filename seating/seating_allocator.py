@@ -61,7 +61,7 @@ def sort_students(students, factors, evolution_strategy, reserved_names):
             optimal, WILD)), seating_arrangements))
 
     seating_arrangements = list(map(lambda students: SeatingArrangement(
-        students, reserved_names, factors), seating_arrangements))
+        students, factors), seating_arrangements))
 
     return evolution_strategy.run(seating_arrangements).get_students()
 
@@ -117,8 +117,3 @@ def load_sample_data(file):
 
 if __name__ == "__main__":
     students = load_sample_data('sample_data.csv')
-
-    factors = ['gender', 'nationality', 'wild']
-    optimal = sort_students(students, factors=factors)
-    print(f'{factors} = {fitness(optimal, factors)}')
-    print('=' * 10)
