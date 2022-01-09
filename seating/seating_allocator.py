@@ -1,13 +1,12 @@
 import random
-
 import itertools
-import collections
 
 from seating.seating_arrangement import SeatingArrangement
 from seating.student import Student, DummyStudent
 from seating.factors import GENDER, NATIONALITY, GROUP, WILD, RANDOM
 
 from seating.student import Student
+
 
 def group_by(xs, attr):
     xs = sorted(xs, key=lambda x: getattr(x, attr))
@@ -30,86 +29,6 @@ def evenly_spaced(iterables):
                 for seq in iterables))]
 
 
-def sort_people(people, factors):
-    once = False
-    optimal = people
-    random.shuffle(people)
-
-    if 'group' in factors:
-        people.sort(key=lambda student: student.get_group())
-        return people
-
-    if 'wild' in factors:
-        optimal = evenly_spaced(group_by(people, 'wild'))
-        once = True
-
-    if 'nationality' in factors:
-        if once:
-            # special function to distribute again
-            out = []
-
-            # get size of people, and split into 20
-            size = len(people)
-            divs = size // 20
-
-            for i in range(divs):
-                # partition this shard
-                this_shard = optimal[i * 20: (i + 1) * 20]
-
-                # sort this shard
-                optimal_shard = evenly_spaced(group_by(this_shard, 'nationality'))
-
-                # add shard in order back to out
-                out.extend(optimal_shard)
-
-            # deal with remaining people(rem)
-            this_shard = people[divs * 20:]
-
-            # sort this shard
-            optimal_shard = evenly_spaced(group_by(this_shard, 'nationality'))
-
-            # add shard in order back to out
-            out.extend(optimal_shard)
-
-            return out
-        else:
-            optimal = evenly_spaced(group_by(people, 'nationality'))
-            once = True
-
-    if 'gender' in factors:
-        if once:
-            # special function to distribute again
-            out = []
-
-            # get size of people, and split into 20
-            size = len(people)
-            divs = size // 20
-
-            for i in range(divs):
-                # partition this shard
-                this_shard = optimal[i * 20: (i + 1) * 20]
-
-                # sort this shard
-                optimal_shard = evenly_spaced(group_by(this_shard, 'gender'))
-
-                # add shard in order back to out
-                out.extend(optimal_shard)
-
-            # deal with remaining people(rem)
-            this_shard = people[divs * 20:]
-
-            # sort this shard
-            optimal_shard = evenly_spaced(group_by(this_shard, 'gender'))
-
-            # add shard in order back to out
-            out.extend(optimal_shard)
-
-            return out
-        else:
-            optimal = evenly_spaced(group_by(people, 'gender'))
-            once = True
-
-    return optimal
 def sort_students(students, factors, evolution_strategy, reserved_names):
     optimal = students.copy()
     random.shuffle(optimal)
@@ -168,53 +87,6 @@ def allocate_seats(layout, people, factors, total_seats, evolution_strategy,
 
     return remaining
 
-
-def evaluate_ordering(people, radius=1):
-    n = len(people)
-    global_avg_predicted_grade = sum(map(lambda p: p.get_predicted_grade(), people)) / n
-
-    global_gender_ratio = len(list(filter(lambda p: p.is_male(), people))) / n
-    # print('global_gender_ratio', global_gender_ratio)
-    nationalities = collections.Counter(map(lambda p: p.get_predicted_grade(), people))
-    global_nationality_ratios = {k: v / n for k, v in nationalities.items()}
-
-    groups = collections.Counter(map(lambda p: p.get_group_name(), people))
-    avg_group_size = sum(groups.values()) / len(groups)
-
-    total_score = 0
-
-    for i in range(radius, len(people) - radius):
-        section = people[i - radius: i + radius + 1]
-        total_score += evaluate_section(section, global_avg_predicted_grade,
-                                        global_nationality_ratios, global_gender_ratio,
-                                        avg_group_size)
-
-    return 100 + total_score
-
-
-def evaluate_section(section, global_avg_predicted_grade,
-                     global_nationality_ratios, global_gender_ratio,
-                     avg_group_size):
-    n = len(section)
-    score = 0
-    avg_predicted_grade = sum(map(lambda p: p.get_predicted_grade(), section)) / n
-    score -= (avg_predicted_grade - global_avg_predicted_grade) ** 2
-
-    gender_ratio = len(list(filter(lambda p: p.is_male(), section))) / n
-    # print(gender_ratio)
-    score -= (global_gender_ratio - gender_ratio) ** 2
-    #
-    nationalities = collections.Counter(map(lambda p: p.get_predicted_grade(), section))
-    nationality_ratios = {k: v / n for k, v in nationalities.items()}
-    score -= sum(map(lambda nat: (nationality_ratios[nat] - global_nationality_ratios[nat]) ** 2,
-                     nationalities.keys()))
-    #
-    # groups = collections.Counter(map(lambda p: p.get_group_name(), section))
-    # score += max(groups.values()) / n
-
-    return score
-
-
 def load_sample_data(file):
     """
     Load student data from file
@@ -226,15 +98,13 @@ def load_sample_data(file):
     with open('sample_data.csv') as sample_data:
         rows = csv.reader(sample_data)
         next(rows)
-        for [username, name, group, disability, gender, nationality, wc_acc, wc_py] \
-                in rows:
+        for [username, name, group, disability, gender, nationality, wc_acc,
+             wc_py] in rows:
 
-            first_name = name.split(' ')[0]
-            last_name = name.split(' ')[0]
-            students.append(Student(first_name, last_name, username, gender=gender,
-                                    nationality=nationality, disability_exception=disability != '',
-                                    wildcard_accountant=wc_acc, wildcard_python=wc_py,
-                                    group_name=group))
+            students.append(Student(name, username, gender,
+                                    nationality, group,
+                                    disability=disability != '',
+                                    wild=wc_py or wc_acc))
 
     return students
 
@@ -247,16 +117,4 @@ if __name__ == "__main__":
                 Student('B1', 'A2', 'B', 'Male'),
                 Student('C1', 'A2', 'C', 'Female'),
                 Student('D1', 'A2', 'D', 'Male')]
-    #
-    for radius in range(1, 10):
-        print(f'radius={radius}')
-        for factor in 'random', 'gender', 'predicted_grade', 'nationality':
-            # print(factor)
-            people = sort_people(students, factors=[factor])
-            # if factor != 'random':
-            #     print(list(map(lambda p: getattr(p, factor), people)))
-            # print('sorted', people)
-            print(f'{factor} = {evaluate_ordering(people.copy())}')
-
-        print('=' * 10)
     students = load_sample_data('sample_data.csv')

@@ -1,4 +1,5 @@
 from pymongo import MongoClient
+import math
 
 from seating.evolution_strategy import EvolutionStrategy
 from seating.layout import Layout
@@ -7,7 +8,6 @@ from seating.seating_mutator import SeatingMutator
 from seating.student import Student
 from seating.factors import WILD
 from seating.fitness_scorer import FitnessScorer
-import math
 
 
 def check_error(no_seats, people, reqs, blanks, social):
@@ -25,9 +25,9 @@ def check_error(no_seats, people, reqs, blanks, social):
     if peeps > no_seats / 2 and social:
         # odd number: will be floored, even is a flat division
         return -3, None
-    # check if pure social distancing is fine, but adding the blanked seats add confusion
-    # first step is to parse the blanks and find out how many more are needed(so even numbers)
-    # reqs: {'3': 'Gisela Peters'}
+    # check if pure social distancing is fine, but adding the blanked seats
+    # add confusion first step is to parse the blanks and find out how many
+    # more are needed(so even numbers) reqs: {'3': 'Gisela Peters'}
     extra = 0
     for seat in blanks:
         seat_no = int(seat)
@@ -39,7 +39,8 @@ def check_error(no_seats, people, reqs, blanks, social):
 
     # check each requirement
     for seat, person in reqs.items():
-        # if seat is an odd number we fail automatically if social distancing is enabled
+        # if seat is an odd number we fail automatically if social distancing
+        # is enabled
         seat_no = int(seat)
         if seat_no % 2 != 0 and social:
             return -5, person # person who is bad
@@ -385,11 +386,3 @@ def get_evolutionary_strategy(factors):
 
 if __name__ == '__main__':
     print(main('c1234-2', 'LTUG', 'gender,', 'Gisela Peters-3,', '1,2,', '0'))
-    # print(get_blanks("1,"))
-    # print(main('c1234-2', 'LTUG', 'seat', 'Brianna Morrison-1,Gisela Peters-3,'))
-    # client = MongoClient(
-    #     "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
-    # db = client.myFirstDatabase
-    # generate_seat_numbers('c1234-2', 'LT3', db)
-    # print(get_reqs('aayush-1,nandhu-2'))
-    print()

@@ -3,7 +3,8 @@ from main import get_module
 import math
 
 client = MongoClient(
-    "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
+    "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net"
+    "/myFirstDatabase?retryWrites=true&w=majority")
 db = client.myFirstDatabase
 
 # get LT3
