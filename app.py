@@ -18,7 +18,7 @@ def index():
             reqs = request.args.get('reqs')
             blanks = request.args.get('blanks')
 
-            seating = main(module, str(lecture_hall), filters, reqs, blanks)
+            seating, info = main(module, str(lecture_hall), filters, reqs, blanks)
 
         else:
             # need to look information up from database
@@ -33,15 +33,30 @@ def index():
             reqs = topic_info['reqString']
             blanks = topic_info['blankString']
 
-            seating = main(module, str(lecture_hall), filters, reqs, blanks)
+            seating, info = main(module, str(lecture_hall), filters, reqs, blanks)
 
         if seating == -1:
             result = {"status": "failure", "reason": "Lecture hall not found"}
             return jsonify(result)
         if seating == -2:
-            result = {"status": "failure", "reason": "Trying to set student "
-                                                     "to a blanked out seat"}
+            result = {"status": "failure", "reason": "Too many seats have been blanked out, try reducing this by " + str(info)}
             return jsonify(result)
+        if seating == -3:
+            result = {"status": "failure", "reason": "This hall is not big enough to support social distancing for this module, try choosing another hall or disabling social distnacing"}
+            return jsonify(result)
+        if seating == -4:
+            result = {"status": "failure", "reason": "This hall is not big enough to support both social distancing and the blanked seats, try reducing blanked seats"}
+            return jsonify(result)
+        if seating == -5:
+            result = {"status": "failure", "reason": "A student (" + info + ") has been set to an odd numbered seat which is not possible due to social distancing, try allocating them to an even number seat instead"}
+            return jsonify(result)
+        if seating == -6:
+            result = {"status": "failure", "reason": "A student (" + info + ") has been set to a seat, which has been blanked out, try removing the blanked seat or move the student elsewhere"}
+            return jsonify(result)
+        if seating == -7:
+            result = {"status": "failure", "reason": "Lecture hall is not big enough for this module (" + str(info) + " students)"}
+            return jsonify(result)
+
         if seating is not None:
             # save to the topic if it is a shuffle before returning it
             if refresh == '1':

@@ -9,6 +9,48 @@ from seating.factors import WILD
 from seating.fitness_scorer import FitnessScorer
 
 
+def check_error(no_seats, people, reqs, blanks, social):
+
+    peeps = len(people)
+
+    # first check, literally too many people
+    if peeps > no_seats:
+        return -7, peeps # no of students in module
+    # second check, too many blanked out seats
+    if peeps > no_seats - len(blanks):
+        return -2, len(blanks) - (no_seats - peeps) # no of blanks to be removed
+    # check if social distancing would be a problem
+    if peeps > no_seats / 2 and social:
+        # odd number: will be floored, even is a flat division
+        return -3, None
+    # check if pure social distancing is fine, but adding the blanked seats add confusion
+    # first step is to parse the blanks and find out how many more are needed(so even numbers)
+    # reqs: {'3': 'Gisela Peters'}
+    extra = 0
+    for seat, person in reqs.items():
+        seat_no = int(seat)
+        if seat_no % 2 == 0:
+            extra += 1
+    if peeps > no_seats / 2 + extra and social:
+        # both are there and it causes an issue
+        return -4, None
+
+    # check each requirement
+    for seat, person in reqs.items():
+        # if seat is an odd number we fail automatically if social distancing is enabled
+        seat_no = int(seat)
+        if seat_no % 2 != 0 and social:
+            return -5, person # person who is bad
+
+        # go through blanks and check
+        for blank in blanks:
+            blank_no = int(blank)
+            if blank_no == seat_no:
+                return -6, person # person who is bad
+
+    return 0, None
+
+
 def get_topic(topic):
     client = MongoClient(
         "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net/"
@@ -259,13 +301,16 @@ def main(module, lecture_hall, filters, reqs, blanks):
     # turn students into list of students
     people = get_students(students)
 
+    error, meta = check_error(no_seats, people, reqs, blanks, 0) # TODO add social distancing
+
+    # parse error anre print message
+    if error != 0:
+        return error, meta
+
     # generate layout from lecture hall
     # takes in list of unavailable seats to blank out beforehand
     # takes in the reserved and student list to put students in place beforehand
     layout = Layout(lecture_hall, reqs, people, blanks)
-
-    if not layout.is_valid():
-        return -2  # user entered a bad combo
 
     names = set(reqs.values())
     people = list(filter(lambda person: person.get_name() not in names,
@@ -293,7 +338,7 @@ def main(module, lecture_hall, filters, reqs, blanks):
     # turn layout into list of lists based on input
     output = generate_layout(layout, lecture_hall)
 
-    return output
+    return output, None
 
 
 def get_students(students):
@@ -342,7 +387,7 @@ def get_evolutionary_strategy(factors):
 
 
 if __name__ == '__main__':
-    print(main('c1234-2', 'LTUG', 'wild,nationality,', 'Gisela Peters-3,', '1,'))
+    print(main('c1234-2', 'LTUG', 'wild,nationality,', 'Gisela Peters-3,', '1,2,'))
     # print(get_blanks("1,"))
     # print(main('c1234-2', 'LTUG', 'seat', 'Brianna Morrison-1,Gisela Peters-3,'))
     # client = MongoClient(
