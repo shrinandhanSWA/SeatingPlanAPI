@@ -7,6 +7,7 @@ from seating.seating_mutator import SeatingMutator
 from seating.student import Student
 from seating.factors import WILD
 from seating.fitness_scorer import FitnessScorer
+import math
 
 
 def check_error(no_seats, people, reqs, blanks, social):
@@ -27,13 +28,13 @@ def check_error(no_seats, people, reqs, blanks, social):
     # first step is to parse the blanks and find out how many more are needed(so even numbers)
     # reqs: {'3': 'Gisela Peters'}
     extra = 0
-    for seat, person in reqs.items():
+    for seat in blanks:
         seat_no = int(seat)
         if seat_no % 2 == 0:
             extra += 1
-    if peeps > no_seats / 2 + extra and social:
+    if peeps > no_seats / 2 - extra and social:
         # both are there and it causes an issue
-        return -4, None
+        return -4, math.ceil(extra - (no_seats/2 - peeps))
 
     # check each requirement
     for seat, person in reqs.items():
@@ -260,7 +261,7 @@ def get_blanks(blanks):
     return out
 
 
-def main(module, lecture_hall, filters, reqs, blanks):
+def main(module, lecture_hall, filters, reqs, blanks, social):
     """
 
     :param module:
@@ -301,7 +302,7 @@ def main(module, lecture_hall, filters, reqs, blanks):
     # turn students into list of students
     people = get_students(students)
 
-    error, meta = check_error(no_seats, people, reqs, blanks, 0) # TODO add social distancing
+    error, meta = check_error(no_seats, people, reqs, blanks, social)
 
     # parse error anre print message
     if error != 0:
@@ -316,9 +317,6 @@ def main(module, lecture_hall, filters, reqs, blanks):
     people = list(filter(lambda person: person.get_name() not in names,
                          people))
     # remove students who have been dealt with in reserved
-
-    # block alternate seats
-    # layout.block_alternate_seats()
 
     # get number of seats in the lecture hall
     no_seats -= len(reqs)

@@ -17,8 +17,9 @@ def index():
             filters = request.args.get('filters')
             reqs = request.args.get('reqs')
             blanks = request.args.get('blanks')
+            social = request.args.get('social')
 
-            seating, info = main(module, str(lecture_hall), filters, reqs, blanks)
+            seating, info = main(module, str(lecture_hall), filters, reqs, blanks, social)
 
         else:
             # need to look information up from database
@@ -32,8 +33,9 @@ def index():
             filters = topic_info['filterString']
             reqs = topic_info['reqString']
             blanks = topic_info['blankString']
+            social = topic_info['social']
 
-            seating, info = main(module, str(lecture_hall), filters, reqs, blanks)
+            seating, info = main(module, str(lecture_hall), filters, reqs, blanks, social)
 
         if seating == -1:
             result = {"status": "failure", "reason": "Lecture hall not found"}
@@ -45,7 +47,7 @@ def index():
             result = {"status": "failure", "reason": "This hall is not big enough to support social distancing for this module, try choosing another hall or disabling social distnacing"}
             return jsonify(result)
         if seating == -4:
-            result = {"status": "failure", "reason": "This hall is not big enough to support both social distancing and the blanked seats, try reducing blanked seats"}
+            result = {"status": "failure", "reason": "This hall is not big enough to support both social distancing and the blanked seats, try reducing even numbered blanked seats by " + str(info)}
             return jsonify(result)
         if seating == -5:
             result = {"status": "failure", "reason": "A student (" + info + ") has been set to an odd numbered seat which is not possible due to social distancing, try allocating them to an even number seat instead"}
