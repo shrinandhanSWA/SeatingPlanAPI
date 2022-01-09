@@ -13,6 +13,7 @@ import math
 def check_error(no_seats, people, reqs, blanks, social):
 
     peeps = len(people)
+    social = int(social)
 
     # first check, literally too many people
     if peeps > no_seats:
@@ -351,13 +352,11 @@ def get_students(students):
         if 'disability' in student:
             person.set_disability(student["disability"])
 
-        if 'wild' in student:
+        if WILD in student:
             person.set_wild(student["wild"])
         else:
             isWild = student["wildCard1"] != '' or student["wildCard2"] != ''
             person.set_wild(str(isWild))
-        if WILD in student:
-            person.set_wild(student[WILD])
 
         people.append(person)
     return people
@@ -385,7 +384,7 @@ def get_evolutionary_strategy(factors):
 
 
 if __name__ == '__main__':
-    print(main('c1234-2', 'LTUG', 'wild,nationality,', 'Gisela Peters-3,', '1,2,'))
+    print(main('c1234-2', 'LTUG', 'gender,', 'Gisela Peters-3,', '1,2,', '0'))
     # print(get_blanks("1,"))
     # print(main('c1234-2', 'LTUG', 'seat', 'Brianna Morrison-1,Gisela Peters-3,'))
     # client = MongoClient(
