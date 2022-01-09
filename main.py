@@ -280,7 +280,7 @@ def main(module, lecture_hall, filters, reqs, blanks, social):
     if filters == 'seat':
         # seat number generation
         generate_seat_numbers(module, lecture_hall, db)
-        return []
+        return [], None
 
     # parse given filters
     filters = get_filters(filters)
@@ -295,7 +295,7 @@ def main(module, lecture_hall, filters, reqs, blanks, social):
     lecture_hall, no_seats = get_lecture_hall(lecture_hall, db, module)
 
     if lecture_hall == -1:
-        return -1
+        return -1, None
 
     # get list of students taking this module
     students = get_module(module, db)["students"]

@@ -44,7 +44,7 @@ def index():
             result = {"status": "failure", "reason": "Too many seats have been blanked out, try reducing this by " + str(info)}
             return jsonify(result)
         if seating == -3:
-            result = {"status": "failure", "reason": "This hall is not big enough to support social distancing for this module, try choosing another hall or disabling social distnacing"}
+            result = {"status": "failure", "reason": "This hall is not big enough to support social distancing for this module, try choosing another hall or disabling social distancing"}
             return jsonify(result)
         if seating == -4:
             result = {"status": "failure", "reason": "This hall is not big enough to support both social distancing and the blanked seats, try reducing even numbered blanked seats by " + str(info)}
