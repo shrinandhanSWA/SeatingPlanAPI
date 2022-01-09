@@ -60,5 +60,10 @@ class Student:
         return self.__repr__()
 
 
-def dummy_student():
-    return Student("fh5", "fh5", "fh5", "fh5", "fh5", real=False)
+class DummyStudent(Student):
+    def __init__(self):
+        super().__init__("fh5", "fh5", "fh5", "fh5", "fh5", real=False)
+
+
+def is_dummy_student(student):
+    return isinstance(student, DummyStudent)

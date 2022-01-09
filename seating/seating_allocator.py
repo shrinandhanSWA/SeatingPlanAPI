@@ -3,6 +3,10 @@ import random
 import itertools
 import collections
 
+from seating.seating_arrangement import SeatingArrangement
+from seating.student import Student, DummyStudent
+from seating.factors import GENDER, NATIONALITY, GROUP, WILD, RANDOM
+
 from seating.student import Student
 
 def group_by(xs, attr):
@@ -106,19 +110,52 @@ def sort_people(people, factors):
             once = True
 
     return optimal
+def sort_students(students, factors, evolution_strategy, reserved_names):
+    optimal = students.copy()
+    random.shuffle(optimal)
+
+    if RANDOM in factors:
+        factors.remove(RANDOM)
+
+    if not factors:
+        return optimal
+
+    if GROUP in factors:
+        optimal.sort(key=lambda student: student.get_group())
+        return optimal
+
+    seating_arrangements = []
+    if NATIONALITY in factors:
+        seating_arrangements.append(evenly_spaced(group_by(students, NATIONALITY)))
+
+    if GENDER in factors:
+        seating_arrangements.append(evenly_spaced(group_by(students, GENDER)))
+
+    # wildcards with special expertise need to be evenly placed around the
+    # lecture theatre
+    if WILD in factors:
+        seating_arrangements = list(map(lambda optimal: evenly_spaced(group_by(
+            optimal, WILD)), seating_arrangements))
+
+    seating_arrangements = list(map(lambda students: SeatingArrangement(
+        students, factors), seating_arrangements))
+
+    return evolution_strategy.run(seating_arrangements).get_students()
 
 
-def allocate_seats(layout, people, factors, total_seats):
+def allocate_seats(layout, people, factors, total_seats, evolution_strategy,
+                   reserved_names):
     """
     Sets random occupant for available seats
-    :param people: list of people
-    :return: list of people that could not be allocated seats
+    :param people: list of students
+    :return: list of students that could not be allocated seats
     """
-    people = sort_people(people, factors)
+    people = sort_students(people, factors, evolution_strategy, reserved_names)
     n = len(people)
     rem = max(0, (total_seats - n))
     for _ in range(rem):
-        people.append(Student("fh5", "fh5", "fh5", "fh5", "fh5", real=False))
+        people.append(DummyStudent())
+
     people = evenly_spaced(group_by(people, 'real'))
     remaining = people
 
@@ -178,7 +215,12 @@ def evaluate_section(section, global_avg_predicted_grade,
     return score
 
 
-def load_sample_data():
+def load_sample_data(file):
+    """
+    Load student data from file
+    :param file: CSV file path
+    :return: list of students
+    """
     import csv
     students = []
     with open('sample_data.csv') as sample_data:
@@ -217,3 +259,4 @@ if __name__ == "__main__":
             print(f'{factor} = {evaluate_ordering(people.copy())}')
 
         print('=' * 10)
+    students = load_sample_data('sample_data.csv')
