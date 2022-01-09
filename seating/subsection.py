@@ -1,4 +1,5 @@
 from seating.seat import Seat
+from seating.student import Student
 from seating.student import DummyStudent, is_dummy_student
 
 
@@ -10,6 +11,7 @@ class Subsection:
 
     def initialise_rows(self, blanks, people, reserved, rows):
         build = []
+
         for row in rows:
             if not self.valid:
                 break
@@ -17,14 +19,12 @@ class Subsection:
             for count in row:
                 this_available = True
                 seat = Seat(count)
-
                 if str(count) in blanks:
                     # it is unavailable
                     # set it to the dummy person we have
-                    seat.set_occupant(DummyStudent())
+                    seat.set_occupant(Student("fh5", "fh5", "fh5", "fh5", "fh5", real=False))
                     seat.set_unavailable()
                     this_available = False
-
                 if str(count) in reserved:
                     if not this_available:
                         # trying to set student into a seat that was blanked out
@@ -40,6 +40,7 @@ class Subsection:
                 this_row.append(seat)
 
             build.append(this_row)
+
         return build
 
     def to_json(self):

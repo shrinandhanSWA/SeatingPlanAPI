@@ -7,6 +7,81 @@ from seating.seating_mutator import SeatingMutator
 from seating.student import Student
 from seating.factors import WILD
 from seating.fitness_scorer import FitnessScorer
+import math
+
+
+def check_error(no_seats, people, reqs, blanks, social):
+
+    peeps = len(people)
+    social = int(social)
+
+    # first check, literally too many people
+    if peeps > no_seats:
+        return -7, peeps # no of students in module
+    # second check, too many blanked out seats
+    if peeps > no_seats - len(blanks):
+        return -2, len(blanks) - (no_seats - peeps) # no of blanks to be removed
+    # check if social distancing would be a problem
+    if peeps > no_seats / 2 and social:
+        # odd number: will be floored, even is a flat division
+        return -3, None
+    # check if pure social distancing is fine, but adding the blanked seats add confusion
+    # first step is to parse the blanks and find out how many more are needed(so even numbers)
+    # reqs: {'3': 'Gisela Peters'}
+    extra = 0
+    for seat in blanks:
+        seat_no = int(seat)
+        if seat_no % 2 == 0:
+            extra += 1
+    if peeps > no_seats / 2 - extra and social:
+        # both are there and it causes an issue
+        return -4, math.ceil(extra - (no_seats/2 - peeps))
+
+    # check each requirement
+    for seat, person in reqs.items():
+        # if seat is an odd number we fail automatically if social distancing is enabled
+        seat_no = int(seat)
+        if seat_no % 2 != 0 and social:
+            return -5, person # person who is bad
+
+        # go through blanks and check
+        for blank in blanks:
+            blank_no = int(blank)
+            if blank_no == seat_no:
+                return -6, person # person who is bad
+
+    return 0, None
+
+
+def get_topic(topic):
+    client = MongoClient(
+        "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net/"
+        "myFirstDatabase?retryWrites=true&w=majority")
+    db = client.myFirstDatabase
+
+    topic_db = db["topics"]
+    topic_info = topic_db.find({"title": topic})
+
+    for topic in topic_info:
+        return topic
+
+
+def save_topic(topic, seating):
+    client = MongoClient(
+        "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net/"
+        "myFirstDatabase?retryWrites=true&w=majority")
+    db = client.myFirstDatabase
+
+    topic_db = db["topics"]
+    topic_info = topic_db.find({"title": topic})
+
+    for topic in topic_info:
+        topic_info = topic
+        break
+
+    topic_info["content"] = seating
+
+    topic_db.save(topic_info)
 
 
 def get_lecture_hall(lecture_hall, db, module, just=False):
@@ -187,7 +262,7 @@ def get_blanks(blanks):
     return out
 
 
-def main(module, lecture_hall, filters, reqs, blanks):
+def main(module, lecture_hall, filters, reqs, blanks, social):
     """
 
     :param module:
@@ -205,7 +280,7 @@ def main(module, lecture_hall, filters, reqs, blanks):
     if filters == 'seat':
         # seat number generation
         generate_seat_numbers(module, lecture_hall, db)
-        return []
+        return [], None
 
     # parse given filters
     filters = get_filters(filters)
@@ -220,7 +295,7 @@ def main(module, lecture_hall, filters, reqs, blanks):
     lecture_hall, no_seats = get_lecture_hall(lecture_hall, db, module)
 
     if lecture_hall == -1:
-        return -1
+        return -1, None
 
     # get list of students taking this module
     students = get_module(module, db)["students"]
@@ -228,21 +303,21 @@ def main(module, lecture_hall, filters, reqs, blanks):
     # turn students into list of students
     people = get_students(students)
 
+    error, meta = check_error(no_seats, people, reqs, blanks, social)
+
+    # parse error anre print message
+    if error != 0:
+        return error, meta
+
     # generate layout from lecture hall
     # takes in list of unavailable seats to blank out beforehand
     # takes in the reserved and student list to put students in place beforehand
     layout = Layout(lecture_hall, reqs, people, blanks)
 
-    if not layout.is_valid():
-        return -2  # user entered a bad combo
-
     names = set(reqs.values())
     people = list(filter(lambda person: person.get_name() not in names,
                          people))
     # remove students who have been dealt with in reserved
-
-    # block alternate seats
-    # layout.block_alternate_seats()
 
     # get number of seats in the lecture hall
     no_seats -= len(reqs)
@@ -255,17 +330,19 @@ def main(module, lecture_hall, filters, reqs, blanks):
                                names)
 
     if remaining:
+        print(remaining)
         # failed to allocate students
         return None
 
     # turn layout into list of lists based on input
     output = generate_layout(layout, lecture_hall)
 
-    return output
+    return output, None
 
 
 def get_students(students):
     people = []
+
     for student in students:
 
         person = Student(student["name"], student["shortcode"],
@@ -276,7 +353,10 @@ def get_students(students):
             person.set_disability(student["disability"])
 
         if WILD in student:
-            person.set_wild(student[WILD])
+            person.set_wild(student["wild"])
+        else:
+            isWild = student["wildCard1"] != '' or student["wildCard2"] != ''
+            person.set_wild(str(isWild))
 
         people.append(person)
     return people
@@ -304,5 +384,12 @@ def get_evolutionary_strategy(factors):
 
 
 if __name__ == '__main__':
-    print(
-        main('c1234-2', 'LTUG', 'wild,nationality,', 'Gisela Peters-3,', '1,'))
+    print(main('c1234-2', 'LTUG', 'gender,', 'Gisela Peters-3,', '1,2,', '0'))
+    # print(get_blanks("1,"))
+    # print(main('c1234-2', 'LTUG', 'seat', 'Brianna Morrison-1,Gisela Peters-3,'))
+    # client = MongoClient(
+    #     "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
+    # db = client.myFirstDatabase
+    # generate_seat_numbers('c1234-2', 'LT3', db)
+    # print(get_reqs('aayush-1,nandhu-2'))
+    print()

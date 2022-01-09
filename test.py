@@ -1,5 +1,6 @@
 from pymongo import MongoClient
 from main import get_module
+import math
 
 client = MongoClient(
     "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
@@ -21,3 +22,6 @@ category["students"] = students
 
 this_db = db["categories"]
 this_db.save(category)
+
+if __name__ == '__main__':
+    math.ceil(2.5)
