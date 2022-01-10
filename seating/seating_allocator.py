@@ -9,7 +9,6 @@ from seating.factors import GENDER, NATIONALITY, GROUP, WILD, RANDOM
 
 from seating.student import Student
 
-
 def group_by(xs, attr):
     xs = sorted(xs, key=lambda x: getattr(x, attr))
     groups = itertools.groupby(xs, lambda x: getattr(x, attr))
@@ -111,8 +110,6 @@ def sort_people(people, factors):
             once = True
 
     return optimal
-
-
 def sort_students(students, factors, evolution_strategy, reserved_names):
     optimal = students.copy()
     random.shuffle(optimal)
@@ -230,6 +227,7 @@ def load_sample_data(file):
         next(rows)
         for [username, name, group, disability, gender, nationality, wc_acc, wc_py] \
                 in rows:
+
             first_name = name.split(' ')[0]
             last_name = name.split(' ')[0]
             students.append(Student(first_name, last_name, username, gender=gender,
@@ -242,13 +240,12 @@ def load_sample_data(file):
 
 if __name__ == "__main__":
     from student import Student
-
     students = load_sample_data()
     # print(students)
     students1 = [Student('A1', 'A2', 'A', 'Female'),
-                 Student('B1', 'A2', 'B', 'Male'),
-                 Student('C1', 'A2', 'C', 'Female'),
-                 Student('D1', 'A2', 'D', 'Male')]
+                Student('B1', 'A2', 'B', 'Male'),
+                Student('C1', 'A2', 'C', 'Female'),
+                Student('D1', 'A2', 'D', 'Male')]
     #
     for radius in range(1, 10):
         print(f'radius={radius}')

@@ -1,6 +1,5 @@
 from flask import Flask, jsonify, request
-from main import main
-from utils import get_topic, save_topic
+from main import main, get_topic, save_topic
 from pymongo import MongoClient
 
 app = Flask(__name__)
