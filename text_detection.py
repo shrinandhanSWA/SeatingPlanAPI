@@ -8,13 +8,18 @@ import sys
 from seating.subsection import Subsection
 from seating.layout import Layout
 
-
+# running the text detection and getting the matrix visualisation
 def matrix_representation(number_of_seats, image_location,
                           result_image_location):
+
+    # initialising the dictionary where we store the information about the detections of numbers, the keys are the
+    # numbers detected and the values are the list of detections of that number
     seats = {}
     for i in range(1, number_of_seats):
         seats[i] = []
 
+    # width and height values of all detections are stored to then choose which width and height values are most
+    # sensible for the detection of the numbers
     widths = {}
     heights = {}
 
@@ -25,6 +30,7 @@ def matrix_representation(number_of_seats, image_location,
 
     img_org = img.copy()
 
+    # applying a range of masks to find the correct shade of blue
     for high in range(0, 21):
         for low in range(0, 12):
             # blue limits
@@ -61,12 +67,13 @@ def matrix_representation(number_of_seats, image_location,
                                 if width in widths:
                                     widths[width] = widths[width] + 1
                                 else:
-                                    widths[width] = 0
+                                    widths[width] = 1
                                 if height in heights:
                                     heights[height] = heights[height] + 1
                                 else:
-                                    heights[height] = 0
+                                    heights[height] = 1
 
+    # deciding the final result of where the seats are detected
     revised_seats = {}
     for seat_number, box in seats.items():
         if len(box) == 0:
@@ -77,17 +84,19 @@ def matrix_representation(number_of_seats, image_location,
         for x, y, width, height in box:
             if heights[height] + widths[width] == best_stat:
                 revised_seats[seat_number] = (x, y, width, height)
+                break
 
     # matrix according to coordinates
     average_width = mean(
         sorted(widths, key=widths.get, reverse=True)[
-        :3]) * 2  # multiply 1.,5 to add space between seats.
+        :3]) * 2  # multiply 2 to add space between seats.
     average_height = mean(
         sorted(heights, key=heights.get, reverse=True)[
-        :3]) * 2  # multiply 1.,5 to add space between seats.
+        :3]) * 2  # multiply 2 to add space between seats.
 
     height, width, _ = img.shape
 
+    # dimensions of the visualisation
     dim_x = int(width / average_width)
     dim_y = int(height / average_height)
 
@@ -97,9 +106,9 @@ def matrix_representation(number_of_seats, image_location,
     for seat_number, box in revised_seats.items():
         x, y, width, height = box
 
-        mean_x = int(x / average_width)
-        mean_y = int(y / average_height)
-        matrix[mean_x][mean_y] = seat_number
+        x_coord = int(x / average_width)
+        y_coord = int(y / average_height)
+        matrix[x_coord][y_coord] = seat_number
 
         cv2.rectangle(img_org, (x, y), (width + x, height + y), (0, 0, 255), 3)
         cv2.putText(img_org, str(seat_number), (x, y), cv2.FONT_HERSHEY_COMPLEX,
@@ -118,187 +127,43 @@ def image_to_layout(number_of_seats, image_location, result_image_location):
 
 
 # create layout from generated matrix
-def layout(generated_matrix):
-    return Layout(transform(generated_matrix))
+def layout(generated_matrix, reqs, people, blanks):
+    return Layout([transform(generated_matrix).tolist()], reqs, people, blanks)
 
 
 # transforms generated matrix after text detection to a the form that is required when creating a layout
 def transform(generated_matrix):
-    subsections = create_subsections(generated_matrix)
+    trimmed = delete_whitespace(generated_matrix)
+    trimmed[trimmed == 0] = -1
 
-    integer_subsections = []
-    for subsection in subsections:
-        integer_subsections.append(numpy_to_list(subsection))
-
-    updated_subsections = []
-    for subsection in integer_subsections:
-        updated_subsections.append(set_zeros_to_minus(subsection))
-
-    return updated_subsections
+    return trimmed.astype(int)
 
 
-# delete all zero rows and create subsections of rows
-def create_subsections(generated_matrix):
-    subsections = []
-    subsection = []
-    for row in generated_matrix.transpose():
-        if np.any(row):
-            subsection.append(row)
-        else:
-            if len(subsection) > 0:
-                subsections.append(subsection)
-            subsection = []
-    return subsections
+# deletes surrounding all zero rows and
+def delete_whitespace(generated_matrix):
+    x_start = 0
+    x_end = 0
+    y_start = 0
+    y_end = 0
 
+    for i in range(0, generated_matrix.shape[0]):
+        if np.any(generated_matrix[i]):
+            if x_start == 0:
+                x_start = i
+            x_end = i
 
-# turn numpy array of numpy arrays to list of list
-def numpy_to_list(subsection):
-    integer_subsection = []
-    for row in subsection:
-        integer_subsection.append(row.astype(int).tolist())
-    return integer_subsection
+    for j in range(0, generated_matrix.shape[1]):
+        if np.any(generated_matrix.transpose()[j]):
+            if y_start == 0:
+                y_start = j
+            y_end = j
 
-
-# set zeros to -1 in rows of the subsection
-def set_zeros_to_minus(subsection):
-    updated_subsection = subsection.copy()
-    for row in updated_subsection:
-        for column in range(0, len(row)):
-            if row[column] == 0:
-                row[column] = -1
-    return updated_subsection
+    return generated_matrix[x_start:(x_end + 1), y_start:(y_end + 1)].transpose()
 
 
 if __name__ == '__main__':
     np.set_printoptions(precision=3)
     np.set_printoptions(threshold=sys.maxsize, linewidth=75 * 3)
 
-    matrix = np.array([[0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
-                        0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
-                          ,
-                       [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
-                        0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
-                          ,
-                       [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
-                        0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
-                          ,
-                       [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
-                        0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
-                          ,
-                       [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
-                        0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
-                          ,
-                       [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
-                        0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
-                          ,
-                       [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
-                        0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
-                          ,
-                       [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
-                        0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
-                          ,
-                       [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
-                        0., 50., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
-                          ,
-                       [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 70., 0., 0., 0.,
-                        0., 0., 49., 48., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
-                          ,
-                       [0., 0., 0., 0., 0., 0., 0., 0., 0., 71., 0., 0., 0., 0.,
-                        0., 0., 0., 0., 47., 0., 0., 0., 0., 0., 0., 0., 0.]
-                          ,
-                       [0., 0., 0., 0., 0., 0., 0., 73., 72., 0., 0., 0., 0.,
-                        0., 0., 41., 40., 0., 0., 46., 0., 0., 0., 0., 0., 0.,
-                        0.]
-                          ,
-                       [0., 0., 0., 0., 0., 0., 74., 0., 0., 0., 63., 62., 0.,
-                        0., 0., 0., 0., 39., 0., 0., 45., 0., 0., 0., 0., 0.,
-                        0.]
-                          ,
-                       [0., 0., 0., 0., 75., 0., 0., 0., 0., 64., 0., 0., 0.,
-                        0., 34., 0., 0., 0., 38., 0., 0., 44., 0., 0., 0., 0.,
-                        0.]
-                          ,
-                       [0., 0., 0., 0., 0., 0., 0., 0., 65., 0., 0., 0., 0., 0.,
-                        0., 33., 0., 0., 0., 37., 0., 0., 43., 0., 0., 0., 0.]
-                          ,
-                       [0., 0., 0., 0., 0., 0., 0., 66., 0., 0., 55., 0., 0.,
-                        0., 0., 0., 32., 0., 0., 0., 36., 0., 0., 42., 0., 0.,
-                        0.]
-                          ,
-                       [0., 0., 0., 0., 0., 0., 67., 0., 0., 56., 0., 0., 0.,
-                        0., 0., 0., 0., 31., 0., 0., 0., 0., 0., 5., 0., 0., 0.]
-                          ,
-                       [0., 0., 0., 0., 0., 68., 0., 0., 0., 0., 0., 0., 0., 0.,
-                        0., 0., 0., 0., 30., 0., 0., 0., 0., 0., 0., 0., 0.]
-                          ,
-                       [0., 0., 0., 0., 0., 0., 0., 0., 57., 0., 0., 0., 0., 0.,
-                        0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
-                          ,
-                       [0., 0., 0., 0., 0., 0., 0., 0., 0., 51., 0., 0., 0., 0.,
-                        0., 27., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
-                          ,
-                       [0., 0., 0., 0., 0., 0., 59., 0., 52., 0., 0., 0., 0.,
-                        0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 26., 0., 0., 0.]
-                          ,
-                       [0., 0., 0., 0., 0., 60., 0., 53., 0., 0., 0., 0., 0.,
-                        0., 0., 0., 0., 0., 0., 0., 19., 0., 0., 28., 0., 0.,
-                        0.]
-                          ,
-                       [0., 0., 0., 0., 61., 0., 54., 0., 3., 0., 0., 0., 0.,
-                        0., 0., 0., 0., 0., 0., 0., 18., 0., 0., 0., 0., 0., 0.]
-                          ,
-                       [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
-                        0., 0., 0., 0., 0., 0., 0., 0., 24., 0., 0., 0., 0.]
-                          ,
-                       [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
-                        0., 0., 10., 0., 0., 17., 0., 23., 0., 0., 0., 0., 0.]
-                          ,
-                       [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
-                        0., 0., 0., 0., 0., 16., 0., 0., 0., 0., 0., 0., 0.]
-                          ,
-                       [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
-                        0., 0., 9., 0., 15., 0., 0., 22., 0., 0., 0., 0., 0.]
-                          ,
-                       [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
-                        0., 8., 0., 0., 0., 0., 21., 0., 0., 0., 0., 0., 0.]
-                          ,
-                       [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
-                        0., 0., 0., 14., 0., 0., 20., 0., 0., 0., 0., 0., 0.]
-                          ,
-                       [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
-                        0., 0., 0., 13., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
-                          ,
-                       [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
-                        0., 0., 12., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
-                          ,
-                       [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
-                        0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
-                          ,
-                       [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
-                        0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
-                          ,
-                       [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
-                        0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
-                          ,
-                       [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
-                        0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
-                          ,
-                       [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
-                        0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
-                          ,
-                       [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
-                        0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
-                          ,
-                       [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
-                        0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]])
-
-    print(matrix.transpose())
-
-    subsections = transform(matrix)
-    for subsection in subsections:
-        for row in subsection:
-            print(row)
-        print()
-
-    layout = layout(matrix)
-    print(layout)
+    # runs the text detection on 3rd lecture theatre and saves the result to 3.png
+    # matrix_representation(77, "theatre_images/3.png", "3.png")
