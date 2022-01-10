@@ -9,141 +9,7 @@ from seating.factors import WILD
 from seating.fitness_scorer import FitnessScorer
 import math
 
-
-def check_error(no_seats, people, reqs, blanks, social):
-
-    peeps = len(people)
-    social = int(social)
-
-    # first check, literally too many people
-    if peeps > no_seats:
-        return -7, peeps # no of students in module
-    # second check, too many blanked out seats
-    if peeps > no_seats - len(blanks):
-        return -2, len(blanks) - (no_seats - peeps) # no of blanks to be removed
-    # check if social distancing would be a problem
-    if peeps > no_seats / 2 and social:
-        # odd number: will be floored, even is a flat division
-        return -3, None
-    # check if pure social distancing is fine, but adding the blanked seats add confusion
-    # first step is to parse the blanks and find out how many more are needed(so even numbers)
-    # reqs: {'3': 'Gisela Peters'}
-    extra = 0
-    for seat in blanks:
-        seat_no = int(seat)
-        if seat_no % 2 == 0:
-            extra += 1
-    if peeps > no_seats / 2 - extra and social:
-        # both are there and it causes an issue
-        return -4, math.ceil(extra - (no_seats/2 - peeps))
-
-    # check each requirement
-    for seat, person in reqs.items():
-        # if seat is an odd number we fail automatically if social distancing is enabled
-        seat_no = int(seat)
-        if seat_no % 2 != 0 and social:
-            return -5, person # person who is bad
-
-        # go through blanks and check
-        for blank in blanks:
-            blank_no = int(blank)
-            if blank_no == seat_no:
-                return -6, person # person who is bad
-
-    return 0, None
-
-
-def get_topic(topic):
-    client = MongoClient(
-        "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net/"
-        "myFirstDatabase?retryWrites=true&w=majority")
-    db = client.myFirstDatabase
-
-    topic_db = db["topics"]
-    topic_info = topic_db.find({"title": topic})
-
-    for topic in topic_info:
-        return topic
-
-
-def save_topic(topic, seating):
-    client = MongoClient(
-        "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net/"
-        "myFirstDatabase?retryWrites=true&w=majority")
-    db = client.myFirstDatabase
-
-    topic_db = db["topics"]
-    topic_info = topic_db.find({"title": topic})
-
-    for topic in topic_info:
-        topic_info = topic
-        break
-
-    topic_info["content"] = seating
-
-    topic_db.save(topic_info)
-
-
-def get_lecture_hall(lecture_hall, db, module, just=False):
-    """
-
-    :param lecture_hall:
-    :param db:
-    :param module:
-    :param just:
-    :return:
-    """
-    lecture_halls = get_module(module, db)["lectureHalls"]
-
-    hall = None
-
-    for hal in lecture_halls:
-        if hal["name"] == lecture_hall:
-            hall = hal
-            break
-
-    if not hall:
-        # hall not found
-        return -1
-
-    if just:
-        return hall
-
-    seats = hall["seatLayout"]
-    no_seats = hall["seatCount"] - 1
-
-    out = []
-
-    for seat in seats:
-        this_subsection_seats = []
-        this_subsection = seat["seats"]
-
-        for row in this_subsection:
-            this_row = []
-
-            for seat1 in row:
-                this_row.append(seat1["seat_no"])
-
-            this_subsection_seats.append(this_row)
-
-        out.append(this_subsection_seats)
-
-    return out, no_seats
-
-
-def get_module(module, db):
-    """
-
-    :param module:
-    :param db:
-    :return:
-    """
-    module_db = db["categories"]
-
-    students = module_db.find({"slug": module})
-
-    for student in students:
-        return student
+from utils import get_lecture_hall, get_module, check_error
 
 
 def generate_layout(layout, lecture_hall):
@@ -230,6 +96,22 @@ def generate_seat_numbers(module, lecture_hall, db):
     this_db.save(category)
 
 
+def populate_lecture_halls(module, db):
+    """
+    :param module:
+    :param lecture_hall:
+    :param db:
+    :return:
+    """
+    category = get_module(module, db)
+
+    target = get_module('c1234-2', db)
+    category["lectureHalls"] = target["lectureHalls"]
+
+    this_db = db["categories"]
+    this_db.save(category)
+
+
 def get_reqs(reqs):
     """
 
@@ -280,6 +162,11 @@ def main(module, lecture_hall, filters, reqs, blanks, social):
     if filters == 'seat':
         # seat number generation
         generate_seat_numbers(module, lecture_hall, db)
+        return [], None
+
+    if filters == 'pop':
+        # populating a new module
+        populate_lecture_halls(module, db)
         return [], None
 
     # parse given filters
@@ -384,12 +271,14 @@ def get_evolutionary_strategy(factors):
 
 
 if __name__ == '__main__':
-    print(main('c1234-2', 'LTUG', 'gender,', 'Gisela Peters-3,', '1,2,', '0'))
+    # print(main('c1234-2', 'LTUG', 'gender,', 'Gisela Peters-3,', '1,2,', '0'))
+    # populate_lecture_halls()
     # print(get_blanks("1,"))
     # print(main('c1234-2', 'LTUG', 'seat', 'Brianna Morrison-1,Gisela Peters-3,'))
-    # client = MongoClient(
-    #     "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
-    # db = client.myFirstDatabase
+    client = MongoClient(
+        "mongodb+srv://admin:ZpwHfTeZDM2ACkBM@cluster0.vqrib.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
+    db = client.myFirstDatabase
+    populate_lecture_halls('c2345', db)
     # generate_seat_numbers('c1234-2', 'LT3', db)
     # print(get_reqs('aayush-1,nandhu-2'))
     print()
