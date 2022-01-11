@@ -8,6 +8,7 @@ from seating.student import Student
 from seating.factors import WILD
 from seating.fitness_scorer import FitnessScorer
 import math
+from utils import get_students
 
 
 def check_error(no_seats, people, reqs, blanks, social):
@@ -339,29 +340,6 @@ def main(module, lecture_hall, filters, reqs, blanks, social):
 
     return output, None
 
-
-def get_students(students):
-    people = []
-
-    for student in students:
-
-        person = Student(student["name"], student["shortcode"],
-                         student["gender"], student["nationality"],
-                         student["group"])
-
-        if 'disability' in student:
-            person.set_disability(student["disability"])
-
-        if WILD in student:
-            person.set_wild(student["wild"])
-        else:
-            isWild = student["wildCard1"] != '' or student["wildCard2"] != ''
-            person.set_wild(str(isWild))
-
-        people.append(person)
-    return people
-
-
 EPOCHS = 100
 MU = 2
 LAMBDA = 5 * MU
@@ -384,7 +362,7 @@ def get_evolutionary_strategy(factors):
 
 
 if __name__ == '__main__':
-    print(main('c1234-2', 'LTUG', 'wild,', 'Gisela Peters-3,', '1,2,', '0'))
+    print(main('c1234-2', 'LTUG', 'gender,group', 'Gisela Peters-3,', '1,2,', '0'))
     # print(get_blanks("1,"))
     # print(main('c1234-2', 'LTUG', 'seat', 'Brianna Morrison-1,Gisela Peters-3,'))
     # client = MongoClient(

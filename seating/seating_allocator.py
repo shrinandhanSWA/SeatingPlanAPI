@@ -110,6 +110,8 @@ def sort_people(people, factors):
             once = True
 
     return optimal
+
+
 def sort_students(students, factors, evolution_strategy, reserved_names):
     optimal = students.copy()
     random.shuffle(optimal)
@@ -125,16 +127,78 @@ def sort_students(students, factors, evolution_strategy, reserved_names):
         return optimal
 
     seating_arrangements = []
-    if NATIONALITY in factors:
-        seating_arrangements.append(evenly_spaced(group_by(students, NATIONALITY)))
-
-    if GENDER in factors:
-        seating_arrangements.append(evenly_spaced(group_by(students, GENDER)))
+    once = False
 
     # wildcards with special expertise need to be evenly placed around the
     # lecture theatre
     if WILD in factors:
         seating_arrangements.append(evenly_spaced(group_by(students, WILD)))
+        once = True
+
+    if NATIONALITY in factors:
+        if once:
+            # special function to distribute again
+            out = []
+
+            # get size of people, and split into 6
+            size = len(students)
+            divs = size // 6
+
+            for i in range(divs):
+                # partition this shard
+                this_shard = optimal[i * 6: (i + 1) * 6]
+
+                # sort this shard
+                optimal_shard = evenly_spaced(group_by(this_shard, 'nationality'))
+
+                # add shard in order back to out
+                out.extend(optimal_shard)
+
+            # deal with remaining people(rem)
+            this_shard = students[divs * 6:]
+
+            # sort this shard
+            optimal_shard = evenly_spaced(group_by(this_shard, 'nationality'))
+
+            # add shard in order back to out
+            out.extend(optimal_shard)
+
+            return out
+        else:
+            seating_arrangements.append(evenly_spaced(group_by(students, NATIONALITY)))
+            once = True
+
+    if GENDER in factors:
+        if once:
+            # special function to distribute again
+            out = []
+
+            # get size of people, and split into 6
+            size = len(students)
+            divs = size // 6
+
+            for i in range(divs):
+                # partition this shard
+                this_shard = optimal[i * 6: (i + 1) * 6]
+
+                # sort this shard
+                optimal_shard = evenly_spaced(group_by(this_shard, 'gender'))
+
+                # add shard in order back to out
+                out.extend(optimal_shard)
+
+            # deal with remaining people(rem)
+            this_shard = students[divs * 6:]
+
+            # sort this shard
+            optimal_shard = evenly_spaced(group_by(this_shard, 'gender'))
+
+            # add shard in order back to out
+            out.extend(optimal_shard)
+
+            return out
+        else:
+            seating_arrangements.append(evenly_spaced(group_by(students, GENDER)))
 
     seating_arrangements = list(map(lambda students: SeatingArrangement(
         students, factors), seating_arrangements))
